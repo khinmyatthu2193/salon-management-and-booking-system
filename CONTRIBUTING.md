@@ -29,6 +29,7 @@ Thanks for your interest in contributing! This guide will help you get started.
 ### Prerequisites
 
 - **Node.js** 18+
+- **pnpm** 8+ (`npm install -g pnpm`)
 - **PostgreSQL** 14+
 - **Git**
 
@@ -54,10 +55,10 @@ git remote add upstream https://github.com/original-owner/salon-management-and-b
 ```bash
 cd server
 cp .env.example .env    # Edit with your PostgreSQL credentials
-npm install
-npx prisma generate
-npx prisma migrate dev --name init
-npx prisma db seed
+pnpm install
+pnpm prisma:generate
+pnpm prisma:migrate
+pnpm prisma:seed
 ```
 
 5. **Install dependencies (client):**
@@ -65,7 +66,7 @@ npx prisma db seed
 ```bash
 cd ../client
 cp .env.example .env    # Set NEXT_PUBLIC_API_URL=http://localhost:5000
-npm install
+pnpm install
 ```
 
 6. **Start both servers:**
@@ -74,14 +75,14 @@ In one terminal:
 
 ```bash
 cd server
-npm run dev     # http://localhost:5000
+pnpm dev        # http://localhost:5000
 ```
 
 In another terminal:
 
 ```bash
 cd client
-npm run dev     # http://localhost:3000
+pnpm dev        # http://localhost:3000
 ```
 
 ---

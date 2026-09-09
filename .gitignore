@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist
+build
+.next
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ESLint
+.eslintcache
+
+# Vercel
+.vercel
+
+# Misc
+*.pem
+*.cert

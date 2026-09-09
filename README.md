@@ -145,7 +145,8 @@ Owner
 
 ### Prerequisites
 
-- **Node.js** 18+ and npm/yarn/pnpm
+- **Node.js** 18+
+- **pnpm** 8+ (`npm install -g pnpm`)
 - **PostgreSQL** 14+ running locally or via Docker
 - **Git**
 
@@ -161,11 +162,11 @@ cd salon-management-and-booking-system
 ```bash
 cd server
 cp .env.example .env    # Edit with your PostgreSQL credentials
-npm install
-npx prisma generate
-npx prisma migrate dev --name init
-npx prisma db seed
-npm run dev             # Starts on http://localhost:5000
+pnpm install
+pnpm prisma:generate
+pnpm prisma:migrate
+pnpm prisma:seed
+pnpm dev                # Starts on http://localhost:5000
 ```
 
 ### 3. Set up the client (Next.js)
@@ -175,8 +176,8 @@ Open a new terminal:
 ```bash
 cd client
 cp .env.example .env    # Set NEXT_PUBLIC_API_URL=http://localhost:5000
-npm install
-npm run dev             # Starts on http://localhost:3000
+pnpm install
+pnpm dev                # Starts on http://localhost:3000
 ```
 
 ### 4. Open in browser
