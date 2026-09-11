@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────
+
+enum Role {
+  owner  @map("owner")
+  manager @map("manager")
+  staff  @map("staff")
+}
+
+// ─── User ─────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One-to-one optional relations (only one will be non-null per user)
+  owner   Owner?
+  manager Manager?
+  staff   Staff?
+}
+
+// ─── Owner ────────────────────────────────────────────────
+
+model Owner {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salons Salon[]
+}
+
+// ─── Salon ────────────────────────────────────────────────
+
+model Salon {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  address     String
+  phone       String?
+  description String?
+  ownerId     String   @db.Uuid
+  managerId   String?  @unique @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner    Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  manager  Manager?  @relation("ManagerSalon", fields: [managerId], references: [id], onDelete: SetNull)
+  staff    Staff[]
+  services Service[]
+}
+
+// ─── Manager ──────────────────────────────────────────────
+
+model Manager {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  salonId   String?  @unique @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salon Salon? @relation("ManagerSalon")
+}
+
+// ─── Staff ────────────────────────────────────────────────
+
+model Staff {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  salonId   String   @db.Uuid
+  specialty String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salon Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+}
+
+// ─── Service ──────────────────────────────────────────────
+
+model Service {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  duration    Int // minutes
+  salonId     String   @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  salon Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+}
