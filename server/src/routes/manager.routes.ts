@@ -6,16 +6,13 @@ import * as managerController from "@/controllers/manager.controller";
 
 const router = Router({ mergeParams: true });
 
-// All manager routes require OWNER role
-router.use(authenticate, authorize("OWNER"));
+// POST /api/managers - Create a new manager user (OWNER only)
+router.post("/", authenticate, authorize("owner"), validate(createManagerSchema), managerController.createManager);
 
-// POST /api/managers - Create a new manager user
-router.post("/", validate(createManagerSchema), managerController.createManager);
+// PUT /api/salons/:salonId/managers/assign - Assign manager to salon (OWNER only)
+router.put("/assign", authenticate, authorize("owner"), validate(assignManagerSchema), managerController.assignManager);
 
-// PUT /api/salons/:salonId/managers/assign - Assign manager to salon
-router.put("/assign", validate(assignManagerSchema), managerController.assignManager);
-
-// GET /api/managers/:id - Get manager details
-router.get("/:id", managerController.getManagerById);
+// GET /api/managers/:id - Get manager details (OWNER + MANAGER)
+router.get("/:id", authenticate, authorize("owner", "manager"), managerController.getManagerById);
 
 export default router;

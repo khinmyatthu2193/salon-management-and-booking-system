@@ -6,19 +6,16 @@ import * as serviceController from "@/controllers/service.controller";
 
 const router = Router({ mergeParams: true });
 
-// All service routes require OWNER role
-router.use(authenticate, authorize("OWNER"));
+// GET /api/salons/:salonId/services - List salon services (OWNER + MANAGER)
+router.get("/", authenticate, authorize("owner", "manager"), serviceController.getSalonServices);
 
-// GET /api/salons/:salonId/services - List salon services
-router.get("/", serviceController.getSalonServices);
+// POST /api/salons/:salonId/services - Create service (OWNER + MANAGER)
+router.post("/", authenticate, authorize("owner", "manager"), validate(createServiceSchema), serviceController.createService);
 
-// POST /api/salons/:salonId/services - Create service
-router.post("/", validate(createServiceSchema), serviceController.createService);
+// PUT /api/services/:id - Update service (OWNER + MANAGER)
+router.put("/:id", authenticate, authorize("owner", "manager"), validate(updateServiceSchema), serviceController.updateService);
 
-// PUT /api/services/:id - Update service
-router.put("/:id", validate(updateServiceSchema), serviceController.updateService);
-
-// DELETE /api/services/:id - Delete service
-router.delete("/:id", serviceController.deleteService);
+// DELETE /api/services/:id - Delete service (OWNER only)
+router.delete("/:id", authenticate, authorize("owner"), serviceController.deleteService);
 
 export default router;

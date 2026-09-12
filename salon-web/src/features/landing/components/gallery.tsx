@@ -2,27 +2,27 @@ import Image from "next/image";
 
 const works = [
 	{
-		src: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80",
+		src: "/avatars/user-7.webp",
 		alt: "Balayage highlights on long hair",
 		className: "col-span-2 row-span-2",
 	},
 	{
-		src: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=800&q=80",
+		src: "/avatars/user-8.webp",
 		alt: "Classic men's fade haircut",
 		className: "",
 	},
 	{
-		src: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=80",
+		src: "/avatars/user-9.webp",
 		alt: "Bridal updo hairstyle",
 		className: "",
 	},
 	{
-		src: "https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=800&q=80",
+		src: "/avatars/user-10.webp",
 		alt: "Vibrant creative hair color",
 		className: "",
 	},
 	{
-		src: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=800&q=80",
+		src: "/avatars/user-1.webp",
 		alt: "Sleek straight blowout",
 		className: "",
 	},
@@ -46,7 +46,7 @@ export function Gallery() {
 						<div
 							key={i}
 							className={`group relative overflow-hidden rounded-xl bg-card border border-border ${work.className}`}>
-							<div className="h-full min-h-[180px] sm:min-h-[220px]">
+							<div className="relative h-full min-h-[180px] sm:min-h-[220px]">
 								<Image
 									src={work.src}
 									alt={work.alt}

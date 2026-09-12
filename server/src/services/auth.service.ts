@@ -1,5 +1,5 @@
-import { Role, RoleType } from "@prisma/constants";
 import { prisma } from "@/config/db";
+import { Role, RoleType } from "@prisma/constants";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -114,4 +114,23 @@ export const login = async (input: LoginInput) => {
 			role: user.role,
 		},
 	};
+};
+
+export const getMe = async (userId: string) => {
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: {
+			id: true,
+			email: true,
+			name: true,
+			phone: true,
+			role: true,
+		},
+	});
+
+	if (!user) {
+		throw new Error("User not found");
+	}
+
+	return user;
 };

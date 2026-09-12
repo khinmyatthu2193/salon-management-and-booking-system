@@ -47,9 +47,14 @@ export function Navbar() {
 				<div className="flex items-center gap-2">
 					<ThemeToggle />
 					<Link
-						href="/booking"
+						href="/login"
+						className={buttonVariants({ variant: "ghost", size: "sm" })}>
+						Login
+					</Link>
+					<Link
+						href="/register"
 						className={buttonVariants({ size: "sm" })}>
-						Book Now
+						Get Started
 					</Link>
 				</div>
 			</div>

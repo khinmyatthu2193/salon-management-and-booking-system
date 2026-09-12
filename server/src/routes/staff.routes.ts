@@ -6,13 +6,10 @@ import * as staffController from "@/controllers/staff.controller";
 
 const router = Router({ mergeParams: true });
 
-// All staff routes require OWNER role
-router.use(authenticate, authorize("OWNER"));
+// GET /api/salons/:salonId/staff - List salon staff (OWNER + MANAGER)
+router.get("/", authenticate, authorize("owner", "manager"), staffController.getSalonStaff);
 
-// GET /api/salons/:salonId/staff - List salon staff
-router.get("/", staffController.getSalonStaff);
-
-// POST /api/salons/:salonId/staff - Add staff to salon
-router.post("/", validate(addStaffSchema), staffController.addStaff);
+// POST /api/salons/:salonId/staff - Add staff to salon (OWNER + MANAGER)
+router.post("/", authenticate, authorize("owner", "manager"), validate(addStaffSchema), staffController.addStaff);
 
 export default router;
