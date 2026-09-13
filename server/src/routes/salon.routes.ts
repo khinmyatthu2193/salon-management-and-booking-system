@@ -5,6 +5,8 @@ import {
 	getUserSalons,
 	updateSalon,
 } from "@/controllers/salon.controller";
+import { getSalonStaff } from "@/controllers/staff.controller";
+import { getSalonServices } from "@/controllers/service.controller";
 import { authenticate, authorize } from "@/middleware/auth.middleware";
 import { validate } from "@/middleware/validate.middleware";
 import { createSalonSchema, updateSalonSchema } from "@/validations";
@@ -34,5 +36,11 @@ router.put(
 
 // DELETE /api/salons/:id - Delete salon (OWNER only)
 router.delete("/:id", authorize("owner"), deleteSalon);
+
+// GET /api/salons/:salonId/staff - List salon staff (OWNER + MANAGER)
+router.get("/:salonId/staff", authorize("owner", "manager"), getSalonStaff);
+
+// GET /api/salons/:salonId/services - List salon services (OWNER + MANAGER)
+router.get("/:salonId/services", authorize("owner", "manager"), getSalonServices);
 
 export default router;

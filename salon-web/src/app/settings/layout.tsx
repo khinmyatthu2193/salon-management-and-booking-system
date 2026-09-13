@@ -31,7 +31,7 @@ export default function SettingsLayout({
 
   return (
     <ProtectedLayout>
-      <RoleGuard allowedRoles={["owner", "manager"]}>
+      <RoleGuard allowedRoles={["manager"]}>
         <div className="space-y-6">
           <PageHeader
             title="Settings"

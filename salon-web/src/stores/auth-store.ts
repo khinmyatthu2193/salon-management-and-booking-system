@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (formData) => {
     const response = await api.post("/api/auth/register", {
       ...formData,
-      role: "owner",
+      role: "customer",
     });
     const data = response.data;
 

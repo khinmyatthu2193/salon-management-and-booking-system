@@ -10,9 +10,10 @@ datasource db {
 // ─── Enums ────────────────────────────────────────────────
 
 enum Role {
-  owner   @map("owner")
-  manager @map("manager")
-  staff   @map("staff")
+  owner    @map("owner")
+  manager  @map("manager")
+  staff    @map("staff")
+  customer @map("customer")
 }
 
 // ─── User ─────────────────────────────────────────────────

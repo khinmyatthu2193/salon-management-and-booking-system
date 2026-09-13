@@ -6,9 +6,12 @@ import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuthStore } from "@/stores/auth-store";
 
 export function Navbar() {
 	const [scrolled, setScrolled] = useState(false);
+	const user = useAuthStore((s) => s.user);
+	const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
 	useEffect(() => {
 		const onScroll = () => setScrolled(window.scrollY > 20);
@@ -16,6 +19,8 @@ export function Navbar() {
 		window.addEventListener("scroll", onScroll, { passive: true });
 		return () => window.removeEventListener("scroll", onScroll);
 	}, []);
+
+	const dashboardHref = user?.role?.toLowerCase() === "owner" ? "/admin/dashboard" : "/dashboard";
 
 	return (
 		<header className="fixed top-4 right-0 left-0 z-50 mx-auto max-w-6xl px-6">
@@ -46,16 +51,26 @@ export function Navbar() {
 
 				<div className="flex items-center gap-2">
 					<ThemeToggle />
-					<Link
-						href="/login"
-						className={buttonVariants({ variant: "ghost", size: "sm" })}>
-						Login
-					</Link>
-					<Link
-						href="/register"
-						className={buttonVariants({ size: "sm" })}>
-						Get Started
-					</Link>
+					{isAuthenticated ? (
+						<Link
+							href={dashboardHref}
+							className={buttonVariants({ size: "sm" })}>
+							Dashboard
+						</Link>
+					) : (
+						<>
+							<Link
+								href="/login"
+								className={buttonVariants({ variant: "ghost", size: "sm" })}>
+								Login
+							</Link>
+							<Link
+								href="/register"
+								className={buttonVariants({ size: "sm" })}>
+								Get Started
+							</Link>
+						</>
+					)}
 				</div>
 			</div>
 		</header>

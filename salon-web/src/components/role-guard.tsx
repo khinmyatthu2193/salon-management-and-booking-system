@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 
 const ROLE_HOME: Record<string, string> = {
-  owner: "/dashboard",
+  owner: "/admin/dashboard",
   manager: "/dashboard",
   staff: "/dashboard",
 };

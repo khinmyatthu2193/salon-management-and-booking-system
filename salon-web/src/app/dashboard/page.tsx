@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
-import { useSalonStore } from "@/features/salon";
 import { ProtectedLayout } from "@/components/protected-layout";
+import { RoleGuard } from "@/components/role-guard";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,7 +14,6 @@ import {
   UserCheck,
   Calendar,
   Settings,
-  Briefcase,
   Clock,
   ArrowRight,
 } from "lucide-react";
@@ -30,15 +29,6 @@ interface QuickAction {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-}
-
-function getOwnerActions(): QuickAction[] {
-  return [
-    { label: "Manage Salons", href: "/salons", icon: Scissors },
-    { label: "Add Manager", href: "/managers", icon: Users },
-    { label: "Manage Staff", href: "/staff", icon: Users },
-    { label: "Manage Services", href: "/services", icon: Scissors },
-  ];
 }
 
 function getManagerActions(): QuickAction[] {
@@ -61,13 +51,12 @@ export default function DashboardPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
-  const { salons, fetchSalons } = useSalonStore();
 
   useEffect(() => {
-    if (user?.role?.toLowerCase() === "owner") {
-      fetchSalons();
+    if (!isLoading && !user) {
+      router.replace("/login");
     }
-  }, [user, fetchSalons]);
+  }, [user, isLoading, router]);
 
   if (isLoading) {
     return (
@@ -77,24 +66,11 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) {
-    router.replace("/login");
-    return null;
-  }
+  if (!user) return null;
 
   const normalizedRole = user.role?.toLowerCase();
 
-  const totalStaff = salons.reduce((acc, s) => acc + (s._count?.staff ?? 0), 0);
-  const totalServices = salons.reduce((acc, s) => acc + (s._count?.services ?? 0), 0);
-
-  const stats: StatCard[] = normalizedRole === "owner"
-    ? [
-        { title: "Total Salons", value: salons.length, description: "Active salons", icon: Scissors },
-        { title: "Total Staff", value: totalStaff, description: "Across all salons", icon: Users },
-        { title: "Total Services", value: totalServices, description: "Active services", icon: Briefcase },
-        { title: "Managers", value: salons.filter((s) => s.manager).length, description: "Assigned", icon: UserCheck },
-      ]
-    : normalizedRole === "manager"
+  const stats: StatCard[] = normalizedRole === "manager"
     ? [
         { title: "Staff Members", value: "—", description: "In your salon", icon: Users },
         { title: "Services", value: "—", description: "Active services", icon: Scissors },
@@ -105,14 +81,13 @@ export default function DashboardPage() {
         { title: "Upcoming", value: "—", description: "This week", icon: Clock },
       ];
 
-  const actions = normalizedRole === "owner"
-    ? getOwnerActions()
-    : normalizedRole === "manager"
+  const actions = normalizedRole === "manager"
     ? getManagerActions()
     : getStaffActions();
 
   return (
     <ProtectedLayout>
+      <RoleGuard allowedRoles={["manager", "staff"]}>
     <div className="space-y-8">
       <PageHeader
         title={`Welcome back, ${user.name}!`}
@@ -156,6 +131,7 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+      </RoleGuard>
     </ProtectedLayout>
   );
 }

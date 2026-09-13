@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useManagerStore } from "../hooks/use-managers";
+import { useManagerStore, type Manager } from "../hooks/use-managers";
 import { ManagerForm } from "./manager-form";
 import { ManagerAssignDialog } from "./manager-assign-dialog";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PlusIcon, LinkIcon, TrashIcon } from "lucide-react";
+import { PlusIcon, LinkIcon, LinkOffIcon, TrashIcon } from "lucide-react";
 
 export function ManagerList() {
   const { managers, isLoading, fetchManagers, createManager, deleteManager } = useManagerStore();
@@ -51,7 +51,7 @@ export function ManagerList() {
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Assigned Salon</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
+                <TableHead className="w-[120px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -63,26 +63,33 @@ export function ManagerList() {
                   <TableCell>{manager.salon?.name || "Unassigned"}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      {!manager.salonId && (
+                      {!manager.salonId ? (
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="icon-sm"
                           title="Assign to salon"
                           onClick={() => setAssignManagerId(manager.id)}
                         >
                           <LinkIcon className="size-4" />
                         </Button>
-                      )}
-                      {!manager.salonId && (
+                      ) : (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          title="Delete manager"
-                          onClick={() => setDeleteId(manager.id)}
+                          size="icon-sm"
+                          title="Reassign to salon"
+                          onClick={() => setAssignManagerId(manager.id)}
                         >
-                          <TrashIcon className="size-4 text-destructive" />
+                          <LinkIcon className="size-4 text-muted-foreground" />
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Delete manager"
+                        onClick={() => setDeleteId(manager.id)}
+                      >
+                        <TrashIcon className="size-4 text-destructive" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

@@ -95,3 +95,20 @@ export const deleteService = async (
 		next(error);
 	}
 };
+
+export const getSalonServices = async (
+	req: AuthRequest,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
+	try {
+		const services = await serviceService.getSalonServices(
+			String(req.params.salonId),
+			req.user!.id,
+			req.user!.role,
+		);
+		res.json({ success: true, data: services });
+	} catch (error) {
+		next(error);
+	}
+};

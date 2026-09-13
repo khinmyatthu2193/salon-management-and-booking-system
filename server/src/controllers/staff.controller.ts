@@ -95,3 +95,20 @@ export const removeStaff = async (
 		next(error);
 	}
 };
+
+export const getSalonStaff = async (
+	req: AuthRequest,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
+	try {
+		const staff = await staffService.getSalonStaff(
+			String(req.params.salonId),
+			req.user!.id,
+			req.user!.role,
+		);
+		res.json({ success: true, data: staff });
+	} catch (error) {
+		next(error);
+	}
+};
