@@ -5,27 +5,27 @@ import { ArrowRight } from "lucide-react";
 const services = [
 	{
 		title: "Hair Styling",
-		image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80",
+		image: "/avatars/user-1.webp",
 	},
 	{
 		title: "Hair Treatment",
-		image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80",
+		image: "/avatars/user-2.webp",
 	},
 	{
 		title: "Nail Care",
-		image: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80",
+		image: "/avatars/user-3.webp",
 	},
 	{
 		title: "Facial Care",
-		image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&q=80",
+		image: "/avatars/user-4.webp",
 	},
 	{
 		title: "Makeup",
-		image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400&q=80",
+		image: "/avatars/user-5.webp",
 	},
 	{
 		title: "Eyebrow & Lash",
-		image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=400&q=80",
+		image: "/avatars/user-6.webp",
 	},
 ];
 
