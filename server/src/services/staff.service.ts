@@ -1,8 +1,9 @@
 import { prisma } from "@/config/db";
 import { Role } from "@prisma/constants";
 import bcrypt from "bcryptjs";
+import { verifySalonAccess } from "./salon-access.service";
 
-interface AddStaffInput {
+interface CreateStaffInput {
 	email: string;
 	password: string;
 	name: string;
@@ -10,44 +11,22 @@ interface AddStaffInput {
 	specialty?: string;
 }
 
+interface AssignStaffInput {
+	salonId: string;
+	specialty?: string;
+}
+
+interface UpdateStaffInput {
+	name?: string;
+	phone?: string;
+	specialty?: string;
+}
+
 const SALT_ROUNDS = 10;
 
-export const getSalonStaff = async (salonId: string, ownerId: string) => {
-	// Verify salon belongs to owner
-	const salon = await prisma.salon.findFirst({
-		where: { id: salonId, ownerId },
-	});
-
-	if (!salon) {
-		throw new Error("Salon not found");
-	}
-
-	return prisma.staff.findMany({
-		where: { salonId },
-		include: {
-			user: { select: { id: true, name: true, email: true, phone: true } },
-		},
-		orderBy: { createdAt: "desc" },
-	});
-};
-
-export const addStaff = async (
-	salonId: string,
-	ownerId: string,
-	input: AddStaffInput,
-) => {
-	// Verify salon belongs to owner
-	const salon = await prisma.salon.findFirst({
-		where: { id: salonId, ownerId },
-	});
-
-	if (!salon) {
-		throw new Error("Salon not found");
-	}
-
+export const addStaff = async (input: CreateStaffInput) => {
 	const { email, password, name, phone, specialty } = input;
 
-	// Check if user already exists
 	const existingUser = await prisma.user.findUnique({ where: { email } });
 	if (existingUser) {
 		throw new Error("Email already registered");
@@ -69,7 +48,6 @@ export const addStaff = async (
 		await tx.staff.create({
 			data: {
 				userId: newUser.id,
-				salonId,
 				specialty,
 			},
 		});
@@ -86,26 +64,162 @@ export const addStaff = async (
 	};
 };
 
-export const removeStaff = async (staffId: string, ownerId: string) => {
-	// Find staff and verify they belong to one of owner's salons
+export const listStaff = async (userId: string) => {
+	const owner = await prisma.owner.findUnique({ where: { userId } });
+	if (!owner) {
+		throw new Error("Owner profile not found");
+	}
+
+	const salonIds = (
+		await prisma.salon.findMany({
+			where: { ownerId: owner.id },
+			select: { id: true },
+		})
+	).map((s) => s.id);
+
+	const staff = await prisma.staff.findMany({
+		include: {
+			user: { select: { id: true, name: true, email: true, phone: true } },
+			salon: { select: { id: true, name: true } },
+		},
+		orderBy: { createdAt: "desc" },
+	});
+
+	return staff.filter(
+		(s) => !s.salonId || salonIds.includes(s.salonId),
+	);
+};
+
+export const getStaffById = async (staffId: string, userId: string) => {
 	const staff = await prisma.staff.findUnique({
 		where: { id: staffId },
-		include: { salon: true },
+		include: {
+			user: { select: { id: true, name: true, email: true, phone: true } },
+			salon: { select: { id: true, name: true } },
+		},
 	});
 
 	if (!staff) {
 		throw new Error("Staff not found");
 	}
 
-	if (staff.salon.ownerId !== ownerId) {
+	if (staff.salonId) {
+		await verifySalonAccess(staff.salonId, userId, Role.STAFF);
+	}
+
+	return staff;
+};
+
+export const assignStaff = async (
+	staffId: string,
+	input: AssignStaffInput,
+	userId: string,
+) => {
+	const { salonId, specialty } = input;
+
+	await verifySalonAccess(salonId, userId, Role.OWNER);
+
+	const staff = await prisma.staff.findUnique({
+		where: { id: staffId },
+	});
+
+	if (!staff) {
 		throw new Error("Staff not found");
 	}
 
-	await prisma.$transaction(async (tx) => {
-		// Delete staff profile
-		await tx.staff.delete({ where: { id: staffId } });
+	if (staff.salonId && staff.salonId !== salonId) {
+		throw new Error("Staff is already assigned to another salon");
+	}
 
-		// Delete user account
+	await prisma.staff.update({
+		where: { id: staffId },
+		data: { salonId, ...(specialty !== undefined && { specialty }) },
+	});
+
+	return { message: "Staff assigned successfully" };
+};
+
+export const getSalonStaff = async (
+	salonId: string,
+	userId: string,
+	role: string,
+) => {
+	await verifySalonAccess(salonId, userId, role);
+
+	return prisma.staff.findMany({
+		where: { salonId },
+		include: {
+			user: { select: { id: true, name: true, email: true, phone: true } },
+		},
+		orderBy: { createdAt: "desc" },
+	});
+};
+
+export const updateStaff = async (
+	staffId: string,
+	userId: string,
+	role: string,
+	input: UpdateStaffInput,
+) => {
+	const staff = await prisma.staff.findUnique({
+		where: { id: staffId },
+	});
+
+	if (!staff) {
+		throw new Error("Staff not found");
+	}
+
+	if (staff.salonId) {
+		await verifySalonAccess(staff.salonId, userId, role);
+	}
+
+	const { name, phone, specialty } = input;
+
+	const updated = await prisma.$transaction(async (tx) => {
+		if (name || phone !== undefined) {
+			await tx.user.update({
+				where: { id: staff.userId },
+				data: { ...(name && { name }), ...(phone !== undefined && { phone }) },
+			});
+		}
+
+		if (specialty !== undefined) {
+			await tx.staff.update({
+				where: { id: staffId },
+				data: { specialty },
+			});
+		}
+
+		return tx.staff.findUnique({
+			where: { id: staffId },
+			include: {
+				user: { select: { id: true, name: true, email: true, phone: true } },
+			},
+		});
+	});
+
+	return updated;
+};
+
+export const removeStaff = async (
+	staffId: string,
+	userId: string,
+	role: string,
+) => {
+	const staff = await prisma.staff.findUnique({
+		where: { id: staffId },
+	});
+
+	if (!staff) {
+		throw new Error("Staff not found");
+	}
+
+	if (staff.salonId) {
+		await verifySalonAccess(staff.salonId, userId, role);
+	}
+
+	await prisma.$transaction(async (tx) => {
+		await tx.staff.delete({ where: { id: staffId } });
 		await tx.user.delete({ where: { id: staff.userId } });
 	});
 

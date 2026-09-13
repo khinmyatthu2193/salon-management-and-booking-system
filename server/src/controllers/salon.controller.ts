@@ -2,13 +2,13 @@ import { Response, NextFunction } from "express";
 import { AuthRequest } from "@/types";
 import * as salonService from "@/services/salon.service";
 
-export const getOwnerSalons = async (
+export const getUserSalons = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const salons = await salonService.getOwnerSalons(req.user!.id);
+    const salons = await salonService.getUserSalons(req.user!.id, req.user!.role);
     res.json({ success: true, data: salons });
   } catch (error) {
     next(error);
@@ -21,7 +21,7 @@ export const getSalonById = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const salon = await salonService.getSalonById(req.params.id, req.user!.id);
+    const salon = await salonService.getSalonById(String(req.params.id), req.user!.id, req.user!.role);
     res.json({ success: true, data: salon });
   } catch (error) {
     next(error);
@@ -48,7 +48,7 @@ export const updateSalon = async (
 ): Promise<void> => {
   try {
     const salon = await salonService.updateSalon(
-      req.params.id,
+      String(req.params.id),
       req.user!.id,
       req.body
     );
@@ -64,7 +64,7 @@ export const deleteSalon = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    await salonService.deleteSalon(req.params.id, req.user!.id);
+    await salonService.deleteSalon(String(req.params.id), req.user!.id);
     res.json({ success: true, message: "Salon deleted successfully" });
   } catch (error) {
     next(error);

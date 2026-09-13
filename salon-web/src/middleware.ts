@@ -9,8 +9,12 @@ export function middleware(request: NextRequest) {
   const publicPaths = ["/", "/login", "/register"];
   const isPublicPath = publicPaths.some((path) => pathname === path);
 
+  // Protected routes that require auth
+  const protectedPaths = ["/dashboard", "/salons", "/managers", "/staff", "/services", "/appointments", "/schedule", "/profile", "/settings"];
+  const isProtectedPath = protectedPaths.some((path) => pathname === path || pathname.startsWith(path + "/"));
+
   // If accessing protected route without token, redirect to login
-  if (!isPublicPath && !token && pathname.startsWith("/dashboard")) {
+  if (isProtectedPath && !token) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

@@ -3,6 +3,9 @@ import "dotenv/config";
 import { errorHandler } from "@/middleware/error.middleware";
 import authRoutes from "@/routes/auth.routes";
 import salonRoutes from "@/routes/salon.routes";
+import managerRoutes from "@/routes/manager.routes";
+import staffRoutes from "@/routes/staff.routes";
+import serviceRoutes from "@/routes/service.routes";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
@@ -32,6 +35,9 @@ app.get("/api/health", (_req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/salons", salonRoutes);
+app.use("/api/managers", managerRoutes);
+app.use("/api/staff", staffRoutes);
+app.use("/api/services", serviceRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

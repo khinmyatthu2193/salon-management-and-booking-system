@@ -1,21 +1,52 @@
-import { Router } from "express";
+import {
+	assignService,
+	createService,
+	deleteService,
+	getServiceById,
+	listServices,
+	updateService,
+} from "@/controllers/service.controller";
 import { authenticate, authorize } from "@/middleware/auth.middleware";
 import { validate } from "@/middleware/validate.middleware";
-import { createServiceSchema, updateServiceSchema } from "@/validations";
-import * as serviceController from "@/controllers/service.controller";
+import { assignServiceSchema, createServiceSchema, updateServiceSchema } from "@/validations";
+import { Router } from "express";
 
-const router = Router({ mergeParams: true });
+const router = Router();
 
-// GET /api/salons/:salonId/services - List salon services (OWNER + MANAGER)
-router.get("/", authenticate, authorize("owner", "manager"), serviceController.getSalonServices);
+// POST /api/services - Create a new service (OWNER only)
+router.post(
+	"/",
+	authenticate,
+	authorize("owner"),
+	validate(createServiceSchema),
+	createService,
+);
 
-// POST /api/salons/:salonId/services - Create service (OWNER + MANAGER)
-router.post("/", authenticate, authorize("owner", "manager"), validate(createServiceSchema), serviceController.createService);
+// GET /api/services - List all unassigned services (OWNER only)
+router.get("/", authenticate, authorize("owner"), listServices);
+
+// GET /api/services/:id - Get service details (OWNER + MANAGER)
+router.get("/:id", authenticate, authorize("owner", "manager"), getServiceById);
+
+// PUT /api/services/:id/assign - Assign service to salon (OWNER only)
+router.put(
+	"/:id/assign",
+	authenticate,
+	authorize("owner"),
+	validate(assignServiceSchema),
+	assignService,
+);
 
 // PUT /api/services/:id - Update service (OWNER + MANAGER)
-router.put("/:id", authenticate, authorize("owner", "manager"), validate(updateServiceSchema), serviceController.updateService);
+router.put(
+	"/:id",
+	authenticate,
+	authorize("owner", "manager"),
+	validate(updateServiceSchema),
+	updateService,
+);
 
 // DELETE /api/services/:id - Delete service (OWNER only)
-router.delete("/:id", authenticate, authorize("owner"), serviceController.deleteService);
+router.delete("/:id", authenticate, authorize("owner"), deleteService);
 
 export default router;

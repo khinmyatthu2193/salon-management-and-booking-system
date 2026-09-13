@@ -48,13 +48,14 @@ export default function LoginForm() {
         </p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
               placeholder="admin@salon.com"
+              autoComplete="off"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -74,6 +75,7 @@ export default function LoginForm() {
               id="password"
               type="password"
               placeholder="••••••"
+              autoComplete="off"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

@@ -1,98 +1,161 @@
 import { prisma } from "@/config/db";
+import { Role } from "@prisma/constants";
+import { verifySalonAccess } from "./salon-access.service";
 
 interface CreateServiceInput {
-  name: string;
-  description?: string;
-  price: number;
-  duration: number;
+	name: string;
+	description?: string;
+	price: number;
+	duration: number;
+}
+
+interface AssignServiceInput {
+	salonId: string;
 }
 
 interface UpdateServiceInput {
-  name?: string;
-  description?: string;
-  price?: number;
-  duration?: number;
+	name?: string;
+	description?: string;
+	price?: number;
+	duration?: number;
 }
 
-export const getSalonServices = async (salonId: string, ownerId: string) => {
-  // Verify salon belongs to owner
-  const salon = await prisma.salon.findFirst({
-    where: { id: salonId, ownerId },
-  });
-
-  if (!salon) {
-    throw new Error("Salon not found");
-  }
-
-  return prisma.service.findMany({
-    where: { salonId },
-    orderBy: { createdAt: "desc" },
-  });
+export const createService = async (input: CreateServiceInput) => {
+	return prisma.service.create({
+		data: {
+			...input,
+		},
+	});
 };
 
-export const createService = async (
-  salonId: string,
-  ownerId: string,
-  input: CreateServiceInput
+export const listServices = async (userId: string) => {
+	const owner = await prisma.owner.findUnique({ where: { userId } });
+	if (!owner) {
+		throw new Error("Owner profile not found");
+	}
+
+	const salonIds = (
+		await prisma.salon.findMany({
+			where: { ownerId: owner.id },
+			select: { id: true },
+		})
+	).map((s) => s.id);
+
+	const services = await prisma.service.findMany({
+		include: {
+			salon: { select: { id: true, name: true } },
+		},
+		orderBy: { createdAt: "desc" },
+	});
+
+	return services.filter(
+		(s) => !s.salonId || salonIds.includes(s.salonId),
+	);
+};
+
+export const getServiceById = async (serviceId: string, userId: string) => {
+	const service = await prisma.service.findUnique({
+		where: { id: serviceId },
+		include: {
+			salon: { select: { id: true, name: true } },
+		},
+	});
+
+	if (!service) {
+		throw new Error("Service not found");
+	}
+
+	if (service.salonId) {
+		await verifySalonAccess(service.salonId, userId, Role.STAFF);
+	}
+
+	return service;
+};
+
+export const assignService = async (
+	serviceId: string,
+	input: AssignServiceInput,
+	userId: string,
 ) => {
-  // Verify salon belongs to owner
-  const salon = await prisma.salon.findFirst({
-    where: { id: salonId, ownerId },
-  });
+	const { salonId } = input;
 
-  if (!salon) {
-    throw new Error("Salon not found");
-  }
+	await verifySalonAccess(salonId, userId, Role.OWNER);
 
-  return prisma.service.create({
-    data: {
-      ...input,
-      salonId,
-    },
-  });
+	const service = await prisma.service.findUnique({
+		where: { id: serviceId },
+	});
+
+	if (!service) {
+		throw new Error("Service not found");
+	}
+
+	if (service.salonId && service.salonId !== salonId) {
+		throw new Error("Service is already assigned to another salon");
+	}
+
+	await prisma.service.update({
+		where: { id: serviceId },
+		data: { salonId },
+	});
+
+	return { message: "Service assigned successfully" };
+};
+
+export const getSalonServices = async (
+	salonId: string,
+	userId: string,
+	role: string,
+) => {
+	await verifySalonAccess(salonId, userId, role);
+
+	return prisma.service.findMany({
+		where: { salonId },
+		orderBy: { createdAt: "desc" },
+	});
 };
 
 export const updateService = async (
-  serviceId: string,
-  ownerId: string,
-  input: UpdateServiceInput
+	serviceId: string,
+	userId: string,
+	role: string,
+	input: UpdateServiceInput,
 ) => {
-  // Find service and verify it belongs to owner's salon
-  const service = await prisma.service.findUnique({
-    where: { id: serviceId },
-    include: { salon: true },
-  });
+	const service = await prisma.service.findUnique({
+		where: { id: serviceId },
+	});
 
-  if (!service) {
-    throw new Error("Service not found");
-  }
+	if (!service) {
+		throw new Error("Service not found");
+	}
 
-  if (service.salon.ownerId !== ownerId) {
-    throw new Error("Service not found");
-  }
+	if (service.salonId) {
+		await verifySalonAccess(service.salonId, userId, role);
+	}
 
-  return prisma.service.update({
-    where: { id: serviceId },
-    data: input,
-  });
+	return prisma.service.update({
+		where: { id: serviceId },
+		data: input,
+	});
 };
 
-export const deleteService = async (serviceId: string, ownerId: string) => {
-  // Find service and verify it belongs to owner's salon
-  const service = await prisma.service.findUnique({
-    where: { id: serviceId },
-    include: { salon: true },
-  });
+export const deleteService = async (
+	serviceId: string,
+	userId: string,
+	role: string,
+) => {
+	const service = await prisma.service.findUnique({
+		where: { id: serviceId },
+	});
 
-  if (!service) {
-    throw new Error("Service not found");
-  }
+	if (!service) {
+		throw new Error("Service not found");
+	}
 
-  if (service.salon.ownerId !== ownerId) {
-    throw new Error("Service not found");
-  }
+	if (service.salonId) {
+		await verifySalonAccess(service.salonId, userId, role);
+	}
 
-  return prisma.service.delete({
-    where: { id: serviceId },
-  });
+	return prisma.service.delete({
+		where: { id: serviceId },
+	});
 };

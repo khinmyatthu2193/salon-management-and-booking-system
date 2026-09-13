@@ -7,7 +7,10 @@ export const createServiceSchema = z.object({
     price: z.number().positive("Price must be positive"),
     duration: z.number().int().positive("Duration must be a positive integer (minutes)"),
   }),
-  params: z.object({
+});
+
+export const assignServiceSchema = z.object({
+  body: z.object({
     salonId: z.string().uuid("Invalid salon ID"),
   }),
 });
@@ -18,8 +21,5 @@ export const updateServiceSchema = z.object({
     description: z.string().optional(),
     price: z.number().positive().optional(),
     duration: z.number().int().positive().optional(),
-  }),
-  params: z.object({
-    id: z.string().uuid("Invalid service ID"),
   }),
 });

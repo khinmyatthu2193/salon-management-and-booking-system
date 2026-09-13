@@ -1,35 +1,38 @@
-import { Router } from "express";
+import {
+	createSalon,
+	deleteSalon,
+	getSalonById,
+	getUserSalons,
+	updateSalon,
+} from "@/controllers/salon.controller";
 import { authenticate, authorize } from "@/middleware/auth.middleware";
 import { validate } from "@/middleware/validate.middleware";
 import { createSalonSchema, updateSalonSchema } from "@/validations";
-import * as salonController from "@/controllers/salon.controller";
-import managerRoutes from "./manager.routes";
-import staffRoutes from "./staff.routes";
-import serviceRoutes from "./service.routes";
+import { Router } from "express";
 
 const router = Router();
-
-// Nested routes
-router.use("/:salonId/managers", managerRoutes);
-router.use("/:salonId/staff", staffRoutes);
-router.use("/:salonId/services", serviceRoutes);
 
 // Salon management — OWNER only for create/update/delete
 router.use(authenticate);
 
 // GET /api/salons - List salons (OWNER sees own, MANAGER/STAFF see assigned)
-router.get("/", salonController.getOwnerSalons);
+router.get("/", getUserSalons);
 
 // POST /api/salons - Create salon (OWNER only)
-router.post("/", authorize("owner"), validate(createSalonSchema), salonController.createSalon);
+router.post("/", authorize("owner"), validate(createSalonSchema), createSalon);
 
 // GET /api/salons/:id - Get salon details (OWNER + MANAGER + STAFF)
-router.get("/:id", authorize("owner", "manager", "staff"), salonController.getSalonById);
+router.get("/:id", authorize("owner", "manager", "staff"), getSalonById);
 
 // PUT /api/salons/:id - Update salon (OWNER only)
-router.put("/:id", authorize("owner"), validate(updateSalonSchema), salonController.updateSalon);
+router.put(
+	"/:id",
+	authorize("owner"),
+	validate(updateSalonSchema),
+	updateSalon,
+);
 
 // DELETE /api/salons/:id - Delete salon (OWNER only)
-router.delete("/:id", authorize("owner"), salonController.deleteSalon);
+router.delete("/:id", authorize("owner"), deleteSalon);
 
 export default router;

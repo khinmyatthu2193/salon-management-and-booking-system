@@ -8,7 +8,19 @@ export const addStaffSchema = z.object({
     phone: z.string().optional(),
     specialty: z.string().optional(),
   }),
-  params: z.object({
+});
+
+export const assignStaffSchema = z.object({
+  body: z.object({
     salonId: z.string().uuid("Invalid salon ID"),
+    specialty: z.string().optional(),
+  }),
+});
+
+export const updateStaffSchema = z.object({
+  body: z.object({
+    name: z.string().min(1).optional(),
+    phone: z.string().optional(),
+    specialty: z.string().optional(),
   }),
 });

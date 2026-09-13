@@ -11,9 +11,6 @@ export const createManagerSchema = z.object({
 
 export const assignManagerSchema = z.object({
   body: z.object({
-    managerId: z.string().uuid("Invalid manager ID"),
-  }),
-  params: z.object({
     salonId: z.string().uuid("Invalid salon ID"),
   }),
 });

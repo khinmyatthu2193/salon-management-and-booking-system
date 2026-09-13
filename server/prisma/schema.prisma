@@ -10,9 +10,9 @@ datasource db {
 // ─── Enums ────────────────────────────────────────────────
 
 enum Role {
-  owner  @map("owner")
+  owner   @map("owner")
   manager @map("manager")
-  staff  @map("staff")
+  staff   @map("staff")
 }
 
 // ─── User ─────────────────────────────────────────────────
@@ -82,13 +82,13 @@ model Manager {
 model Staff {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @unique @db.Uuid
-  salonId   String   @db.Uuid
+  salonId   String?  @db.Uuid
   specialty String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  salon Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salon Salon? @relation(fields: [salonId], references: [id], onDelete: SetNull)
 }
 
 // ─── Service ──────────────────────────────────────────────
@@ -99,9 +99,9 @@ model Service {
   description String?
   price       Decimal  @db.Decimal(10, 2)
   duration    Int // minutes
-  salonId     String   @db.Uuid
+  salonId     String?  @db.Uuid
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  salon Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salon Salon? @relation(fields: [salonId], references: [id], onDelete: SetNull)
 }

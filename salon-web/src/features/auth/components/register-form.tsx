@@ -3,13 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AudioLinesIcon } from "lucide-react";
+import { AudioLinesIcon, RefreshCwIcon } from "lucide-react";
 
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+function generatePassword(length = 8): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  for (let i = 0; i < length; i++) {
+    result += chars[array[i] % chars.length];
+  }
+  return result;
+}
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -63,13 +74,14 @@ export default function RegisterForm() {
         </p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
               type="text"
               placeholder="John Doe"
+              autoComplete="off"
               value={formData.name}
               onChange={handleChange}
               required
@@ -81,6 +93,7 @@ export default function RegisterForm() {
               id="email"
               type="email"
               placeholder="m@example.com"
+              autoComplete="off"
               value={formData.email}
               onChange={handleChange}
               required
@@ -88,14 +101,23 @@ export default function RegisterForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+            <div className="flex gap-2">
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••"
+                autoComplete="off"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+              <Button type="button" variant="outline" size="icon" title="Generate random password" onClick={() => {
+                const pwd = generatePassword();
+                setFormData({ ...formData, password: pwd, confirmPassword: pwd });
+              }}>
+                <RefreshCwIcon className="size-4" />
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -103,6 +125,7 @@ export default function RegisterForm() {
               id="confirmPassword"
               type="password"
               placeholder="••••••"
+              autoComplete="off"
               value={formData.confirmPassword}
               onChange={handleChange}
               required

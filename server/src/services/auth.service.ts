@@ -125,6 +125,8 @@ export const getMe = async (userId: string) => {
 			name: true,
 			phone: true,
 			role: true,
+			manager: { select: { id: true, salonId: true } },
+			staff: { select: { id: true, salonId: true } },
 		},
 	});
 
@@ -132,5 +134,8 @@ export const getMe = async (userId: string) => {
 		throw new Error("User not found");
 	}
 
-	return user;
+	return {
+		...user,
+		salonId: user.manager?.salonId ?? user.staff?.salonId ?? null,
+	};
 };

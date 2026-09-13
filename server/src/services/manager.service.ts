@@ -1,5 +1,6 @@
 import { Role } from "@prisma/constants";
 import { prisma } from "@/config/db";
+import { verifySalonAccess } from "./salon-access.service";
 import bcrypt from "bcryptjs";
 
 interface CreateManagerInput {
@@ -53,24 +54,80 @@ export const createManager = async (input: CreateManagerInput) => {
 	};
 };
 
+export const listManagers = async (userId: string) => {
+	// Verify caller is an owner
+	const owner = await prisma.owner.findUnique({ where: { userId } });
+	if (!owner) {
+		throw new Error("Owner profile not found");
+	}
+
+	// Get salons owned by this owner
+	const salonIds = (
+		await prisma.salon.findMany({
+			where: { ownerId: owner.id },
+			select: { id: true },
+		})
+	).map((s) => s.id);
+
+	// Get all managers, with salon info
+	const managers = await prisma.manager.findMany({
+		include: {
+			user: { select: { id: true, name: true, email: true, phone: true } },
+			salon: { select: { id: true, name: true } },
+		},
+		orderBy: { createdAt: "desc" },
+	});
+
+	// Filter to unassigned managers or managers assigned to owner's salons
+	return managers.filter(
+		(m) => !m.salonId || salonIds.includes(m.salonId),
+	);
+};
+
+export const getManagerById = async (managerId: string, userId: string) => {
+	const manager = await prisma.manager.findUnique({
+		where: { id: managerId },
+		include: {
+			user: { select: { id: true, name: true, email: true, phone: true } },
+			salon: { select: { id: true, name: true, ownerId: true } },
+		},
+	});
+
+	if (!manager) {
+		throw new Error("Manager not found");
+	}
+
+	// If assigned to a salon, verify the salon belongs to the caller
+	if (manager.salon) {
+		const role = (await prisma.user.findUnique({ where: { id: userId } }))?.role;
+		if (role === Role.OWNER) {
+			const owner = await prisma.owner.findUnique({ where: { userId } });
+			if (!owner || manager.salon.ownerId !== owner.id) {
+				throw new Error("Manager not found");
+			}
+		} else if (role === Role.MANAGER) {
+			// Managers can only view themselves
+			const callerManager = await prisma.manager.findUnique({ where: { userId } });
+			if (!callerManager || callerManager.id !== managerId) {
+				throw new Error("Manager not found");
+			}
+		}
+	}
+
+	return manager;
+};
+
 export const assignManager = async (
 	managerId: string,
 	salonId: string,
-	ownerId: string,
+	userId: string,
 ) => {
-	// Verify salon belongs to owner
-	const salon = await prisma.salon.findFirst({
-		where: { id: salonId, ownerId },
-	});
-
-	if (!salon) {
-		throw new Error("Salon not found");
-	}
+	// Verify salon access
+	await verifySalonAccess(salonId, userId, Role.OWNER);
 
 	// Verify manager exists
 	const manager = await prisma.manager.findUnique({
 		where: { id: managerId },
-		include: { user: true },
 	});
 
 	if (!manager) {
@@ -83,7 +140,8 @@ export const assignManager = async (
 	}
 
 	// Unassign any existing manager from this salon
-	if (salon.managerId) {
+	const salon = await prisma.salon.findUnique({ where: { id: salonId } });
+	if (salon?.managerId) {
 		await prisma.manager.update({
 			where: { id: salon.managerId },
 			data: { salonId: null },
@@ -106,23 +164,31 @@ export const assignManager = async (
 	return { message: "Manager assigned successfully" };
 };
 
-export const getManagerById = async (managerId: string, ownerId: string) => {
+export const deleteManager = async (managerId: string, userId: string) => {
+	// Verify caller is an owner
+	const owner = await prisma.owner.findUnique({ where: { userId } });
+	if (!owner) {
+		throw new Error("Owner profile not found");
+	}
+
 	const manager = await prisma.manager.findUnique({
 		where: { id: managerId },
-		include: {
-			user: { select: { id: true, name: true, email: true, phone: true } },
-			salon: { select: { id: true, name: true, ownerId: true } },
-		},
+		include: { user: true },
 	});
 
 	if (!manager) {
 		throw new Error("Manager not found");
 	}
 
-	// Verify manager is either unassigned or assigned to owner's salon
-	if (manager.salon && manager.salon.ownerId !== ownerId) {
-		throw new Error("Manager not found");
+	// Only allow deleting unassigned managers
+	if (manager.salonId) {
+		throw new Error("Cannot delete an assigned manager. Unassign first.");
 	}
 
-	return manager;
+	await prisma.$transaction(async (tx) => {
+		await tx.manager.delete({ where: { id: managerId } });
+		await tx.user.delete({ where: { id: manager.userId } });
+	});
+
+	return { message: "Manager deleted successfully" };
 };
