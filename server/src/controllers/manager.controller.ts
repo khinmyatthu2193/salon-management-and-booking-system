@@ -8,7 +8,7 @@ export const createManager = async (
 	next: NextFunction,
 ): Promise<void> => {
 	try {
-		const manager = await managerService.createManager(req.body);
+		const manager = await managerService.createManager(req.body, req.user!.role);
 		res.status(201).json({ success: true, data: manager });
 	} catch (error) {
 		next(error);

@@ -29,9 +29,10 @@ model User {
   updatedAt DateTime @updatedAt
 
   // One-to-one optional relations (only one will be non-null per user)
-  owner   Owner?
-  manager Manager?
-  staff   Staff?
+  owner    Owner?
+  manager  Manager?
+  staff    Staff?
+  customer Customer?
 }
 
 // ─── Owner ────────────────────────────────────────────────
@@ -105,4 +106,15 @@ model Service {
   updatedAt   DateTime @updatedAt
 
   salon Salon? @relation(fields: [salonId], references: [id], onDelete: SetNull)
+}
+
+// ─── Customer ─────────────────────────────────────────────
+
+model Customer {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

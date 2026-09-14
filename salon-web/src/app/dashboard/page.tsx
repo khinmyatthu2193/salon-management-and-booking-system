@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { ProtectedLayout } from "@/components/protected-layout";
 import { RoleGuard } from "@/components/role-guard";
@@ -17,6 +15,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface StatCard {
   title: string;
@@ -51,12 +50,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.replace("/login");
-    }
-  }, [user, isLoading, router]);
 
   if (isLoading) {
     return (

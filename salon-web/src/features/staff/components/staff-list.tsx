@@ -84,9 +84,9 @@ export function StaffList(props: StaffListProps) {
             <TableBody>
               {displayStaff.map((s) => (
                 <TableRow key={s.id}>
-                  <TableCell className="font-medium">{s.user.name}</TableCell>
-                  <TableCell>{s.user.email}</TableCell>
-                  <TableCell>{s.user.phone || "—"}</TableCell>
+                  <TableCell className="font-medium">{s.user?.name || "—"}</TableCell>
+                  <TableCell>{s.user?.email || "—"}</TableCell>
+                  <TableCell>{s.user?.phone || "—"}</TableCell>
                   <TableCell>{s.specialty || "—"}</TableCell>
                   {isAdminProps(props) && (
                     <TableCell>{s.salon?.name || "Unassigned"}</TableCell>

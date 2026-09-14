@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AudioLinesIcon, RefreshCwIcon } from "lucide-react";
 
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthStore, getDefaultRoute } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,12 @@ export default function RegisterForm() {
     setIsLoading(true);
     setError("");
 
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setIsLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
@@ -51,8 +57,8 @@ export default function RegisterForm() {
 
     try {
       const { confirmPassword: _, ...registerData } = formData;
-      await register(registerData);
-      router.push("/dashboard");
+      const user = await register(registerData);
+      router.push(getDefaultRoute(user.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {

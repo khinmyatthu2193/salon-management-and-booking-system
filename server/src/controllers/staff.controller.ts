@@ -8,7 +8,7 @@ export const addStaff = async (
 	next: NextFunction,
 ): Promise<void> => {
 	try {
-		const staff = await staffService.addStaff(req.body);
+		const staff = await staffService.addStaff(req.body, req.user!.role);
 		res.status(201).json({ success: true, data: staff });
 	} catch (error) {
 		next(error);
@@ -21,7 +21,7 @@ export const listStaff = async (
 	next: NextFunction,
 ): Promise<void> => {
 	try {
-		const staff = await staffService.listStaff(req.user!.id);
+		const staff = await staffService.listStaff(req.user!.id, req.user!.role);
 		res.json({ success: true, data: staff });
 	} catch (error) {
 		next(error);

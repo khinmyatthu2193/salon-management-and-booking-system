@@ -13,17 +13,17 @@ import { Router } from "express";
 
 const router = Router();
 
-// POST /api/staff - Create a new staff user (OWNER only)
+// POST /api/staff - Create a new staff user (OWNER + MANAGER)
 router.post(
 	"/",
 	authenticate,
-	authorize("owner"),
+	authorize("owner", "manager"),
 	validate(addStaffSchema),
 	addStaff,
 );
 
-// GET /api/staff - List all unassigned staff (OWNER only)
-router.get("/", authenticate, authorize("owner"), listStaff);
+// GET /api/staff - List staff (OWNER sees all salons, MANAGER sees assigned salon)
+router.get("/", authenticate, authorize("owner", "manager"), listStaff);
 
 // GET /api/staff/:id - Get staff details (OWNER + MANAGER)
 router.get("/:id", authenticate, authorize("owner", "manager"), getStaffById);

@@ -57,9 +57,9 @@ export function ManagerList() {
             <TableBody>
               {managers.map((manager) => (
                 <TableRow key={manager.id}>
-                  <TableCell className="font-medium">{manager.user.name}</TableCell>
-                  <TableCell>{manager.user.email}</TableCell>
-                  <TableCell>{manager.user.phone || "—"}</TableCell>
+                  <TableCell className="font-medium">{manager.user?.name || "—"}</TableCell>
+                  <TableCell>{manager.user?.email || "—"}</TableCell>
+                  <TableCell>{manager.user?.phone || "—"}</TableCell>
                   <TableCell>{manager.salon?.name || "Unassigned"}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">

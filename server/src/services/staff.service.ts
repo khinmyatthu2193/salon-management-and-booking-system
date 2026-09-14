@@ -24,7 +24,12 @@ interface UpdateStaffInput {
 
 const SALT_ROUNDS = 10;
 
-export const addStaff = async (input: CreateStaffInput) => {
+export const addStaff = async (input: CreateStaffInput, callerRole: string) => {
+	// Defense-in-depth: verify caller role even though route middleware checks it
+	if (callerRole !== "owner" && callerRole !== "manager") {
+		throw new Error("Only owners and managers can create staff");
+	}
+
 	const { email, password, name, phone, specialty } = input;
 
 	const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -64,7 +69,30 @@ export const addStaff = async (input: CreateStaffInput) => {
 	};
 };
 
-export const listStaff = async (userId: string) => {
+export const listStaff = async (userId: string, role: string) => {
+	const user = await prisma.user.findUnique({ where: { id: userId } });
+	if (!user) {
+		throw new Error("User not found");
+	}
+
+	if (role === "manager") {
+		// Manager sees staff from their assigned salon only
+		const managerProfile = await prisma.manager.findUnique({ where: { userId } });
+		if (!managerProfile?.salonId) {
+			return []; // Manager not assigned to a salon yet
+		}
+
+		return prisma.staff.findMany({
+			where: { salonId: managerProfile.salonId },
+			include: {
+				user: { select: { id: true, name: true, email: true, phone: true } },
+				salon: { select: { id: true, name: true } },
+			},
+			orderBy: { createdAt: "desc" },
+		});
+	}
+
+	// Owner sees unassigned staff + staff from all their salons
 	const owner = await prisma.owner.findUnique({ where: { userId } });
 	if (!owner) {
 		throw new Error("Owner profile not found");
@@ -77,17 +105,19 @@ export const listStaff = async (userId: string) => {
 		})
 	).map((s) => s.id);
 
-	const staff = await prisma.staff.findMany({
+	return prisma.staff.findMany({
+		where: {
+			OR: [
+				{ salonId: null },
+				{ salonId: { in: salonIds } },
+			],
+		},
 		include: {
 			user: { select: { id: true, name: true, email: true, phone: true } },
 			salon: { select: { id: true, name: true } },
 		},
 		orderBy: { createdAt: "desc" },
 	});
-
-	return staff.filter(
-		(s) => !s.salonId || salonIds.includes(s.salonId),
-	);
 };
 
 export const getStaffById = async (staffId: string, userId: string) => {

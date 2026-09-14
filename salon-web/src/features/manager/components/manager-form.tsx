@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RefreshCwIcon } from "lucide-react";
+import { CredentialsDisplayDialog } from "@/features/staff/components/credentials-display-dialog";
 
 function generatePassword(length = 8): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -28,6 +29,8 @@ export function ManagerForm({ open, onOpenChange, onSubmit }: ManagerFormProps) 
   const [formData, setFormData] = useState({ name: "", email: "", password: "", phone: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ name: string; email: string; password: string } | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -41,8 +44,22 @@ export function ManagerForm({ open, onOpenChange, onSubmit }: ManagerFormProps) 
     setIsLoading(true);
     setError("");
     try {
+      // Capture credentials before submission
+      const credentials = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      };
+
       await onSubmit({ ...formData, phone: formData.phone || undefined });
+
+      // Close form and show credentials dialog
       onOpenChange(false);
+      setCreatedCredentials(credentials);
+      setShowCredentials(true);
+
+      // Reset form
+      setFormData({ name: "", email: "", password: "", phone: "" });
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || "Something went wrong");
     } finally {
@@ -51,6 +68,7 @@ export function ManagerForm({ open, onOpenChange, onSubmit }: ManagerFormProps) 
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -86,5 +104,12 @@ export function ManagerForm({ open, onOpenChange, onSubmit }: ManagerFormProps) 
         </form>
       </DialogContent>
     </Dialog>
+
+    <CredentialsDisplayDialog
+      open={showCredentials}
+      onOpenChange={setShowCredentials}
+      credentials={createdCredentials}
+    />
+    </>
   );
 }

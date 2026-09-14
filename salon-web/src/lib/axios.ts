@@ -10,11 +10,6 @@ const api = axios.create({
   },
 });
 
-// Request interceptor — attach token from cookie if present (for SSR/manual cases)
-api.interceptors.request.use((config) => {
-  return config;
-});
-
 // Response interceptor — handle 401 globally
 api.interceptors.response.use(
   (response) => response,

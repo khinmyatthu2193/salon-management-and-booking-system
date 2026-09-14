@@ -5,6 +5,7 @@ import {
   Calendar,
   Settings,
   User,
+  Store,
 } from "lucide-react";
 
 export interface NavItem {
@@ -13,7 +14,7 @@ export interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-export type Role = "owner" | "manager" | "staff";
+export type Role = "owner" | "manager" | "staff" | "customer";
 
 export const navConfig: Record<Role, NavItem[]> = {
   owner: [
@@ -34,6 +35,11 @@ export const navConfig: Record<Role, NavItem[]> = {
   staff: [
     { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { title: "My Schedule", url: "/schedule", icon: Calendar },
+    { title: "Profile", url: "/profile", icon: User },
+  ],
+  customer: [
+    { title: "Browse Salons", url: "/salons", icon: Store },
+    { title: "My Appointments", url: "/appointments", icon: Calendar },
     { title: "Profile", url: "/profile", icon: User },
   ],
 };

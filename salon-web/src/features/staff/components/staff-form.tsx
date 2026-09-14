@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RefreshCwIcon } from "lucide-react";
+import { CredentialsDisplayDialog } from "./credentials-display-dialog";
 import type { Staff } from "../hooks/use-staff";
 
 function generatePassword(length = 8): string {
@@ -30,16 +31,18 @@ export function StaffForm({ open, onOpenChange, staff, onSubmit }: StaffFormProp
   const [formData, setFormData] = useState({ name: "", email: "", password: "", phone: "", specialty: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ name: string; email: string; password: string } | null>(null);
 
   const isEditing = !!staff;
 
   useEffect(() => {
     if (open && staff) {
       setFormData({
-        name: staff.user.name,
-        email: staff.user.email,
+        name: staff.user?.name || "",
+        email: staff.user?.email || "",
         password: "",
-        phone: staff.user.phone || "",
+        phone: staff.user?.phone || "",
         specialty: staff.specialty || "",
       });
     } else if (open) {
@@ -59,14 +62,29 @@ export function StaffForm({ open, onOpenChange, staff, onSubmit }: StaffFormProp
           phone: formData.phone || undefined,
           specialty: formData.specialty || undefined,
         });
+        onOpenChange(false);
       } else {
+        // Capture credentials before submission
+        const credentials = {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        };
+
         await onSubmit({
           ...formData,
           phone: formData.phone || undefined,
           specialty: formData.specialty || undefined,
         });
+
+        // Close form and show credentials dialog
+        onOpenChange(false);
+        setCreatedCredentials(credentials);
+        setShowCredentials(true);
+
+        // Reset form
+        setFormData({ name: "", email: "", password: "", phone: "", specialty: "" });
       }
-      onOpenChange(false);
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || "Something went wrong");
     } finally {
@@ -75,6 +93,7 @@ export function StaffForm({ open, onOpenChange, staff, onSubmit }: StaffFormProp
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -120,5 +139,12 @@ export function StaffForm({ open, onOpenChange, staff, onSubmit }: StaffFormProp
         </form>
       </DialogContent>
     </Dialog>
+
+    <CredentialsDisplayDialog
+      open={showCredentials}
+      onOpenChange={setShowCredentials}
+      credentials={createdCredentials}
+    />
+    </>
   );
 }
