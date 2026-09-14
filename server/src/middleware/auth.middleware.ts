@@ -1,8 +1,12 @@
 import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AuthRequest, JwtPayload } from "@/types";
+import { isTokenRevoked } from "@/services/token-blacklist";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this";
+if (!process.env.JWT_SECRET) {
+	throw new Error("JWT_SECRET environment variable is required");
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export const authenticate = (
   req: AuthRequest,
@@ -18,6 +22,11 @@ export const authenticate = (
 
   if (!token) {
     res.status(401).json({ success: false, error: "No token provided" });
+    return;
+  }
+
+  if (isTokenRevoked(token)) {
+    res.status(401).json({ success: false, error: "Token has been revoked" });
     return;
   }
 

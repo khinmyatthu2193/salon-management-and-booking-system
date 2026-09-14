@@ -14,16 +14,30 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
 
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (data: {
     name: string;
     email: string;
     password: string;
     phone?: string;
-  }) => Promise<void>;
+  }) => Promise<User>;
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
   setUser: (user: User | null) => void;
+}
+
+export function getDefaultRoute(role: string): string {
+  switch (role?.toLowerCase()) {
+    case "owner":
+      return "/admin/dashboard";
+    case "staff":
+      return "/schedule";
+    case "manager":
+      return "/dashboard";
+    case "customer":
+    default:
+      return "/salons";
+  }
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -40,6 +54,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     set({ user: data.data.user, isAuthenticated: true });
+    return data.data.user;
   },
 
   register: async (formData) => {
@@ -54,6 +69,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     set({ user: data.data.user, isAuthenticated: true });
+    return data.data.user;
   },
 
   logout: async () => {

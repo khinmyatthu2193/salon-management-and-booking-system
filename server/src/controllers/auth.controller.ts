@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as authService from "@/services/auth.service";
+import { revokeToken } from "@/services/token-blacklist";
 
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -21,7 +22,8 @@ export const register = async (
   try {
     const result = await authService.register(req.body);
     setTokenCookie(res, result.token);
-    res.status(201).json({ success: true, data: result });
+    // Return only user data — token lives in httpOnly cookie, not response body
+    res.status(201).json({ success: true, data: { user: result.user } });
   } catch (error) {
     next(error);
   }
@@ -35,18 +37,25 @@ export const login = async (
   try {
     const result = await authService.login(req.body);
     setTokenCookie(res, result.token);
-    res.json({ success: true, data: result });
+    // Return only user data — token lives in httpOnly cookie, not response body
+    res.json({ success: true, data: { user: result.user } });
   } catch (error) {
     next(error);
   }
 };
 
 export const logout = async (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
+    // Revoke the token so it can't be used even if intercepted
+    const cookieToken = req.cookies?.token;
+    if (cookieToken) {
+      revokeToken(cookieToken);
+    }
+
     res.cookie("token", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

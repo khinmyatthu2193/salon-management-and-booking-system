@@ -16,7 +16,12 @@ interface AssignManagerInput {
 
 const SALT_ROUNDS = 10;
 
-export const createManager = async (input: CreateManagerInput) => {
+export const createManager = async (input: CreateManagerInput, callerRole: string) => {
+	// Defense-in-depth: verify caller role even though route middleware checks it
+	if (callerRole !== "owner") {
+		throw new Error("Only owners can create managers");
+	}
+
 	const { email, password, name, phone } = input;
 
 	// Check if user already exists

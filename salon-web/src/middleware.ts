@@ -6,11 +6,11 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public paths that don't require auth
-  const publicPaths = ["/", "/login", "/register"];
+  const publicPaths = ["/", "/login", "/register", "/salons"];
   const isPublicPath = publicPaths.some((path) => pathname === path);
 
   // Protected routes that require auth
-  const protectedPaths = ["/dashboard", "/salons", "/managers", "/staff", "/services", "/appointments", "/schedule", "/profile", "/settings", "/admin"];
+  const protectedPaths = ["/dashboard", "/managers", "/staff", "/services", "/appointments", "/schedule", "/profile", "/settings", "/admin"];
   const isProtectedPath = protectedPaths.some((path) => pathname === path || pathname.startsWith(path + "/"));
 
   // If accessing protected route without token, redirect to login

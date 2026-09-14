@@ -1,11 +1,7 @@
 import { prisma } from "@/config/db";
 import { Role, RoleType } from "@prisma/constants";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-
-const JWT_SECRET =
-	process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this";
-const JWT_EXPIRES_IN = "7d";
+import { generateToken } from "./token-blacklist";
 
 interface RegisterInput {
 	email: string;
@@ -28,7 +24,7 @@ export const register = async (input: RegisterInput) => {
 	// Check if user already exists
 	const existingUser = await prisma.user.findUnique({ where: { email } });
 	if (existingUser) {
-		throw new Error("Email already registered");
+		throw new Error("Invalid email or password");
 	}
 
 	// Hash password
@@ -55,20 +51,19 @@ export const register = async (input: RegisterInput) => {
 				await tx.manager.create({ data: { userId: newUser.id } });
 				break;
 			case Role.STAFF:
-				// Staff needs a salonId, so we create the user first
-				// Staff profile will be created when assigned to a salon
+				// Staff cannot self-register — they must be created by an owner/manager
+				// via the staff management endpoints which handle salon assignment.
+				break;
+			case Role.CUSTOMER:
+				await tx.customer.create({ data: { userId: newUser.id } });
 				break;
 		}
 
 		return newUser;
 	});
 
-	// Generate JWT
-	const token = jwt.sign(
-		{ id: user.id, email: user.email, role: user.role },
-		JWT_SECRET,
-		{ expiresIn: JWT_EXPIRES_IN },
-	);
+	// Generate JWT (used by controller for httpOnly cookie — not sent in response body)
+	const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
 	return {
 		token,
@@ -97,12 +92,8 @@ export const login = async (input: LoginInput) => {
 		throw new Error("Invalid email or password");
 	}
 
-	// Generate JWT
-	const token = jwt.sign(
-		{ id: user.id, email: user.email, role: user.role },
-		JWT_SECRET,
-		{ expiresIn: JWT_EXPIRES_IN },
-	);
+	// Generate JWT (used by controller for httpOnly cookie — not sent in response body)
+	const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
 	return {
 		token,
