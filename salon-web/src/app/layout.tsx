@@ -32,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 					<ThemeProvider
 						attribute="class"
 						defaultTheme="dark"
-						themes={["dark", "blush"]}
+						themes={["dark", "white"]}
 						disableTransitionOnChange>
 						{children}
 					</ThemeProvider>

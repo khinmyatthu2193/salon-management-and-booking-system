@@ -1,5 +1,3 @@
-"use client";
-
 import { AppearanceForm } from "@/features/setting";
 
 export default function AppearanceSettingsPage() {

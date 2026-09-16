@@ -44,6 +44,23 @@ export const getManagerById = async (
 	}
 };
 
+export const updateManager = async (
+	req: AuthRequest,
+	res: Response,
+	next: NextFunction,
+): Promise<void> => {
+	try {
+		const manager = await managerService.updateManager(
+			String(req.params.id),
+			req.body,
+			req.user!.id,
+		);
+		res.json({ success: true, data: manager });
+	} catch (error) {
+		next(error);
+	}
+};
+
 export const assignManager = async (
 	req: AuthRequest,
 	res: Response,

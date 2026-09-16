@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useManagerStore } from "../hooks/use-managers";
 import api from "@/lib/axios";
 
@@ -25,6 +26,7 @@ export function ManagerAssignDialog({ managerId, onOpenChange, onAssigned }: Man
   const { assignManager } = useManagerStore();
 
   const open = managerId !== null;
+  const selectedSalon = salons.find((s) => s.id === salonId);
 
   useEffect(() => {
     if (open) {
@@ -62,19 +64,18 @@ export function ManagerAssignDialog({ managerId, onOpenChange, onAssigned }: Man
         <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <div className="space-y-2">
             <label htmlFor="salon" className="text-sm font-medium">Salon</label>
-            <select
-              id="salon"
-              autoComplete="off"
-              value={salonId}
-              onChange={(e) => setSalonId(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              required
-            >
-              <option value="">Select a salon</option>
-              {salons.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
+            <Select value={salonId} onValueChange={setSalonId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a salon">
+                  {selectedSalon?.name || "Select a salon"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {salons.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

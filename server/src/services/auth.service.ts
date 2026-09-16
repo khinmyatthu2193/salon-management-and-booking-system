@@ -115,7 +115,9 @@ export const getMe = async (userId: string) => {
 			email: true,
 			name: true,
 			phone: true,
+			address: true,
 			role: true,
+			avatar: true,
 			manager: { select: { id: true, salonId: true } },
 			staff: { select: { id: true, salonId: true } },
 		},
@@ -129,4 +131,55 @@ export const getMe = async (userId: string) => {
 		...user,
 		salonId: user.manager?.salonId ?? user.staff?.salonId ?? null,
 	};
+};
+
+interface UpdateProfileInput {
+	name?: string;
+	phone?: string;
+	address?: string;
+	avatar?: string;
+}
+
+export const updateProfile = async (userId: string, input: UpdateProfileInput) => {
+	const user = await prisma.user.update({
+		where: { id: userId },
+		data: {
+			...(input.name !== undefined && { name: input.name }),
+			...(input.phone !== undefined && { phone: input.phone }),
+			...(input.address !== undefined && { address: input.address }),
+			...(input.avatar !== undefined && { avatar: input.avatar }),
+		},
+		select: {
+			id: true,
+			email: true,
+			name: true,
+			phone: true,
+			address: true,
+			role: true,
+			avatar: true,
+		},
+	});
+
+	return user;
+};
+
+interface ChangePasswordInput {
+	currentPassword: string;
+	newPassword: string;
+}
+
+export const changePassword = async (userId: string, input: ChangePasswordInput) => {
+	const user = await prisma.user.findUnique({ where: { id: userId } });
+	if (!user) throw new Error("User not found");
+
+	const isValid = await bcrypt.compare(input.currentPassword, user.password);
+	if (!isValid) throw new Error("Current password is incorrect");
+
+	const hashedPassword = await bcrypt.hash(input.newPassword, SALT_ROUNDS);
+	await prisma.user.update({
+		where: { id: userId },
+		data: { password: hashedPassword },
+	});
+
+	return { message: "Password updated successfully" };
 };

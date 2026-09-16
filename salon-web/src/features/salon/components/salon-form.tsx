@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import type { Salon } from "../hooks/use-salons";
 
+const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
+
 interface SalonFormProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -20,8 +22,10 @@ interface SalonFormProps {
 	onSubmit: (data: {
 		name: string;
 		address: string;
-		phone?: string;
-		description?: string;
+		phone: string;
+		description: string;
+		isPublished?: boolean;
+		openingHours?: Record<string, string>;
 	}) => Promise<void>;
 }
 
@@ -36,6 +40,8 @@ export function SalonForm({
 		address: "",
 		phone: "",
 		description: "",
+		isPublished: true,
+		openingHours: {} as Record<string, string>,
 	});
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
@@ -47,9 +53,18 @@ export function SalonForm({
 				address: salon.address,
 				phone: salon.phone || "",
 				description: salon.description || "",
+				isPublished: salon.isPublished ?? true,
+				openingHours: (salon.openingHours as Record<string, string>) || {},
 			});
 		} else if (open) {
-			setFormData({ name: "", address: "", phone: "", description: "" });
+			setFormData({
+				name: "",
+				address: "",
+				phone: "",
+				description: "",
+				isPublished: true,
+				openingHours: {},
+			});
 		}
 		setError("");
 	}, [open, salon]);
@@ -62,8 +77,10 @@ export function SalonForm({
 			await onSubmit({
 				name: formData.name,
 				address: formData.address,
-				phone: formData.phone || undefined,
-				description: formData.description || undefined,
+				phone: formData.phone,
+				description: formData.description,
+				isPublished: formData.isPublished,
+				openingHours: Object.keys(formData.openingHours).length > 0 ? formData.openingHours : undefined,
 			});
 			onOpenChange(false);
 		} catch (err: any) {
@@ -75,11 +92,18 @@ export function SalonForm({
 		}
 	};
 
+	const updateOpeningHours = (day: string, value: string) => {
+		setFormData({
+			...formData,
+			openingHours: { ...formData.openingHours, [day]: value },
+		});
+	};
+
 	return (
 		<Dialog
 			open={open}
 			onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>{salon ? "Edit Salon" : "Add Salon"}</DialogTitle>
 				</DialogHeader>
@@ -113,7 +137,7 @@ export function SalonForm({
 						/>
 					</div>
 					<div className="space-y-2">
-						<Label htmlFor="phone">Phone (optional)</Label>
+						<Label htmlFor="phone">Phone</Label>
 						<Input
 							id="phone"
 							autoComplete="off"
@@ -121,10 +145,11 @@ export function SalonForm({
 							onChange={(e) =>
 								setFormData({ ...formData, phone: e.target.value })
 							}
+							required
 						/>
 					</div>
 					<div className="space-y-2">
-						<Label htmlFor="description">Description (optional)</Label>
+						<Label htmlFor="description">Description</Label>
 						<Input
 							id="description"
 							autoComplete="off"
@@ -132,8 +157,43 @@ export function SalonForm({
 							onChange={(e) =>
 								setFormData({ ...formData, description: e.target.value })
 							}
+							required
 						/>
 					</div>
+
+					<div className="flex items-center gap-2">
+						<input
+							type="checkbox"
+							id="isPublished"
+							checked={formData.isPublished}
+							onChange={(e) =>
+								setFormData({ ...formData, isPublished: e.target.checked })
+							}
+							className="h-4 w-4 rounded border-gray-300"
+						/>
+						<Label htmlFor="isPublished" className="cursor-pointer">
+							Published
+						</Label>
+					</div>
+
+					<div className="space-y-2">
+						<Label>Opening Hours (optional)</Label>
+						<div className="grid gap-2">
+							{DAYS.map((day) => (
+								<div key={day} className="flex items-center gap-2">
+									<span className="w-24 text-sm capitalize">{day}</span>
+									<Input
+										autoComplete="off"
+										placeholder="9:00-18:00"
+										value={formData.openingHours[day] || ""}
+										onChange={(e) => updateOpeningHours(day, e.target.value)}
+										className="flex-1"
+									/>
+								</div>
+							))}
+						</div>
+					</div>
+
 					<DialogFooter>
 						<Button
 							type="button"

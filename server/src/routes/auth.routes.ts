@@ -1,8 +1,8 @@
-import { login, logout, me, register } from "@/controllers/auth.controller";
+import { login, logout, me, register, updateProfile, changePassword } from "@/controllers/auth.controller";
 import { authenticate } from "@/middleware/auth.middleware";
 import { rateLimit } from "@/middleware/rate-limit";
 import { validate } from "@/middleware/validate.middleware";
-import { loginSchema, registerSchema } from "@/validations";
+import { loginSchema, registerSchema, updateProfileSchema, changePasswordSchema } from "@/validations";
 import { Router } from "express";
 
 const router = Router();
@@ -18,5 +18,11 @@ router.post("/logout", logout);
 
 // GET /api/auth/me - Get current user
 router.get("/me", authenticate, me);
+
+// PUT /api/auth/profile - Update profile (any authenticated user)
+router.put("/profile", authenticate, validate(updateProfileSchema), updateProfile);
+
+// PUT /api/auth/password - Change password (any authenticated user)
+router.put("/password", authenticate, validate(changePasswordSchema), changePassword);
 
 export default router;
