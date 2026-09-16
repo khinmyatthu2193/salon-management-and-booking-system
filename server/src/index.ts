@@ -6,6 +6,7 @@ import salonRoutes from "@/routes/salon.routes";
 import managerRoutes from "@/routes/manager.routes";
 import staffRoutes from "@/routes/staff.routes";
 import serviceRoutes from "@/routes/service.routes";
+import customerRoutes from "@/routes/customer.routes";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
@@ -38,6 +39,7 @@ app.use("/api/salons", salonRoutes);
 app.use("/api/managers", managerRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/services", serviceRoutes);
+app.use("/api/customers", customerRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

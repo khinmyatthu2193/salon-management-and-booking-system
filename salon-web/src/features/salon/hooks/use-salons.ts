@@ -5,8 +5,11 @@ export interface Salon {
 	id: string;
 	name: string;
 	address: string;
-	phone?: string;
-	description?: string;
+	phone: string;
+	description: string;
+	rating: number;
+	isPublished: boolean;
+	openingHours?: Record<string, string>;
 	ownerId: string;
 	managerId?: string;
 	createdAt: string;
@@ -24,8 +27,10 @@ interface SalonState {
 	createSalon: (data: {
 		name: string;
 		address: string;
-		phone?: string;
-		description?: string;
+		phone: string;
+		description: string;
+		isPublished?: boolean;
+		openingHours?: Record<string, string>;
 	}) => Promise<void>;
 	updateSalon: (id: string, data: Partial<Salon>) => Promise<void>;
 	deleteSalon: (id: string) => Promise<void>;

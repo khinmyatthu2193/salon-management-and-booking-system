@@ -6,6 +6,8 @@ interface CreateSalonInput {
   address: string;
   phone?: string;
   description?: string;
+  isPublished?: boolean;
+  openingHours?: Record<string, string>;
 }
 
 interface UpdateSalonInput {
@@ -13,6 +15,15 @@ interface UpdateSalonInput {
   address?: string;
   phone?: string;
   description?: string;
+  isPublished?: boolean;
+  openingHours?: Record<string, string>;
+}
+
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 export const getUserSalons = async (userId: string, role: string) => {
@@ -94,9 +105,12 @@ export const createSalon = async (userId: string, input: CreateSalonInput) => {
     throw new Error("Owner profile not found");
   }
 
+  const slug = generateSlug(input.name);
+
   return prisma.salon.create({
     data: {
       ...input,
+      slug,
       ownerId: owner.id,
     },
   });

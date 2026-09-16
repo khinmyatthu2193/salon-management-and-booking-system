@@ -5,9 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RefreshCwIcon } from "lucide-react";
 import { CredentialsDisplayDialog } from "./credentials-display-dialog";
 import type { Staff } from "../hooks/use-staff";
+
+const SPECIALTY_OPTIONS = [
+  { value: "Hair Stylist", label: "Hair Stylist" },
+  { value: "Colorist", label: "Colorist" },
+  { value: "Barber", label: "Barber" },
+  { value: "Nail Technician", label: "Nail Technician" },
+  { value: "Esthetician", label: "Esthetician" },
+  { value: "Makeup Artist", label: "Makeup Artist" },
+  { value: "Massage Therapist", label: "Massage Therapist" },
+];
 
 function generatePassword(length = 8): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -35,6 +46,7 @@ export function StaffForm({ open, onOpenChange, staff, onSubmit }: StaffFormProp
   const [createdCredentials, setCreatedCredentials] = useState<{ name: string; email: string; password: string } | null>(null);
 
   const isEditing = !!staff;
+  const selectedSpecialty = SPECIALTY_OPTIONS.find((o) => o.value === formData.specialty);
 
   useEffect(() => {
     if (open && staff) {
@@ -59,7 +71,7 @@ export function StaffForm({ open, onOpenChange, staff, onSubmit }: StaffFormProp
       if (isEditing) {
         await onSubmit({
           name: formData.name,
-          phone: formData.phone || undefined,
+          phone: formData.phone,
           specialty: formData.specialty || undefined,
         });
         onOpenChange(false);
@@ -73,7 +85,7 @@ export function StaffForm({ open, onOpenChange, staff, onSubmit }: StaffFormProp
 
         await onSubmit({
           ...formData,
-          phone: formData.phone || undefined,
+          phone: formData.phone,
           specialty: formData.specialty || undefined,
         });
 
@@ -123,12 +135,25 @@ export function StaffForm({ open, onOpenChange, staff, onSubmit }: StaffFormProp
             </>
           )}
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone (optional)</Label>
-            <Input id="phone" autoComplete="off" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+            <Label htmlFor="phone">Phone</Label>
+            <Input id="phone" autoComplete="off" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="specialty">Specialty (optional)</Label>
-            <Input id="specialty" autoComplete="off" value={formData.specialty} onChange={(e) => setFormData({ ...formData, specialty: e.target.value })} />
+            <Select value={formData.specialty} onValueChange={(value) => setFormData({ ...formData, specialty: value })}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select specialty">
+                  {selectedSpecialty?.label || "Select specialty"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {SPECIALTY_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

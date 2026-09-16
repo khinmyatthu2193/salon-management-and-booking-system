@@ -5,7 +5,8 @@ export interface Manager {
   id: string;
   userId: string;
   salonId?: string;
-  user: { id: string; name: string; email: string; phone?: string };
+  avatar?: string;
+  user: { id: string; name: string; email: string; phone: string; address?: string; role?: string };
   salon?: { id: string; name: string };
 }
 
@@ -14,7 +15,8 @@ interface ManagerState {
   isLoading: boolean;
   error: string | null;
   fetchManagers: () => Promise<void>;
-  createManager: (data: { name: string; email: string; password: string; phone?: string }) => Promise<void>;
+  createManager: (data: { name: string; email: string; password: string; phone: string }) => Promise<void>;
+  updateManager: (managerId: string, data: { phone: string; address: string }) => Promise<void>;
   assignManager: (managerId: string, salonId: string) => Promise<void>;
   deleteManager: (managerId: string) => Promise<void>;
 }
@@ -37,6 +39,15 @@ export const useManagerStore = create<ManagerState>((set) => ({
   createManager: async (data) => {
     const res = await api.post("/api/managers", data);
     set((s) => ({ managers: [res.data.data, ...s.managers] }));
+  },
+
+  updateManager: async (managerId, data) => {
+    const res = await api.put(`/api/managers/${managerId}`, data);
+    set((s) => ({
+      managers: s.managers.map((m) =>
+        m.id === managerId ? { ...m, ...res.data.data } : m,
+      ),
+    }));
   },
 
   assignManager: async (managerId, salonId) => {

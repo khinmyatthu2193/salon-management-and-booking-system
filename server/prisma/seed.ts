@@ -26,15 +26,22 @@ const staffData = [
 	{ name: "Htun", email: "htun@salon.com", specialty: "Nail Technician", salon: "Style Studio" },
 ];
 
+const customersData = [
+	{ name: "Aye", email: "aye@salon.com" },
+	{ name: "Kyaw", email: "kyaw@salon.com" },
+];
+
 const salonsData = [
 	{
 		name: "Glow Beauty Salon",
+		slug: "glow-beauty-salon",
 		address: "78 35th Street, Mandalay",
 		phone: "09 780 123 456",
 		managerEmail: "ye@salon.com",
 	},
 	{
 		name: "Style Studio",
+		slug: "style-studio",
 		address: "62 78th Street, Mandalay",
 		phone: "09 250 987 654",
 		managerEmail: "khin@salon.com",
@@ -43,13 +50,13 @@ const salonsData = [
 
 const servicesData = [
 	// Glow Beauty Salon
-	{ name: "Haircut", description: "Professional haircut and styling", duration: 45, price: 12000, salon: "Glow Beauty Salon" },
-	{ name: "Hair Coloring", description: "Full hair coloring service", duration: 120, price: 35000, salon: "Glow Beauty Salon" },
-	{ name: "Facial Treatment", description: "Deep cleansing and relaxing facial", duration: 60, price: 25000, salon: "Glow Beauty Salon" },
+	{ name: "Haircut", slug: "haircut", description: "Professional haircut and styling", duration: 45, price: 12000, salon: "Glow Beauty Salon" },
+	{ name: "Hair Coloring", slug: "hair-coloring", description: "Full hair coloring service", duration: 120, price: 35000, salon: "Glow Beauty Salon" },
+	{ name: "Facial Treatment", slug: "facial-treatment", description: "Deep cleansing and relaxing facial", duration: 60, price: 25000, salon: "Glow Beauty Salon" },
 	// Style Studio
-	{ name: "Men's Haircut", description: "Modern men's haircut and styling", duration: 30, price: 8000, salon: "Style Studio" },
-	{ name: "Hair Wash & Blow Dry", description: "Hair wash with professional blow drying", duration: 40, price: 10000, salon: "Style Studio" },
-	{ name: "Manicure", description: "Basic manicure and nail care", duration: 45, price: 15000, salon: "Style Studio" },
+	{ name: "Men's Haircut", slug: "mens-haircut", description: "Modern men's haircut and styling", duration: 30, price: 8000, salon: "Style Studio" },
+	{ name: "Hair Wash & Blow Dry", slug: "hair-wash-blow-dry", description: "Hair wash with professional blow drying", duration: 40, price: 10000, salon: "Style Studio" },
+	{ name: "Manicure", slug: "manicure", description: "Basic manicure and nail care", duration: 45, price: 15000, salon: "Style Studio" },
 ];
 
 async function main() {
@@ -103,7 +110,7 @@ async function main() {
 		if (!salon) {
 			const managerId = managerMap.get(s.managerEmail) || null;
 			salon = await prisma.salon.create({
-				data: { name: s.name, address: s.address, phone: s.phone, ownerId: owner.id, managerId },
+				data: { name: s.name, slug: s.slug, address: s.address, phone: s.phone, ownerId: owner.id, managerId },
 			});
 			if (managerId) {
 				await prisma.manager.update({ where: { id: managerId }, data: { salonId: salon.id } });
@@ -137,6 +144,23 @@ async function main() {
 		}
 	}
 
+	// ── Customers ──────────────────────────────────────────
+	for (const c of customersData) {
+		let user = await prisma.user.findUnique({ where: { email: c.email } });
+		if (!user) {
+			user = await prisma.$transaction(async (tx) => {
+				const u = await tx.user.create({
+					data: { email: c.email, password: hashedPassword, name: c.name, role: Role.CUSTOMER },
+				});
+				await tx.customer.create({ data: { userId: u.id } });
+				return u;
+			});
+			console.log("✅ Customer created:", c.email, "/ password123");
+		} else {
+			console.log("⚠️  Customer already exists:", c.email);
+		}
+	}
+
 	// ── Services ───────────────────────────────────────────
 	for (const svc of servicesData) {
 		const salonId = salonMap.get(svc.salon);
@@ -145,7 +169,7 @@ async function main() {
 		const existing = await prisma.service.findFirst({ where: { name: svc.name, salonId } });
 		if (!existing) {
 			await prisma.service.create({
-				data: { name: svc.name, description: svc.description, price: svc.price, duration: svc.duration, salonId },
+				data: { name: svc.name, slug: svc.slug, description: svc.description, price: svc.price, duration: svc.duration, salonId },
 			});
 			console.log("✅ Service created:", svc.name, "→", svc.salon);
 		} else {
@@ -161,6 +185,8 @@ async function main() {
 	console.log("   Staff login:    nwe@salon.com / password123");
 	console.log("   Staff login:    zaw@salon.com / password123");
 	console.log("   Staff login:    htun@salon.com / password123");
+	console.log("   Customer login: aye@salon.com / password123");
+	console.log("   Customer login: kyaw@salon.com / password123");
 }
 
 main()

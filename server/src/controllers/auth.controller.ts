@@ -82,3 +82,31 @@ export const me = async (
     next(error);
   }
 };
+
+export const updateProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = (req as any).user?.id;
+    const user = await authService.updateProfile(userId, req.body);
+    res.json({ success: true, data: { user } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = (req as any).user?.id;
+    const result = await authService.changePassword(userId, req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};

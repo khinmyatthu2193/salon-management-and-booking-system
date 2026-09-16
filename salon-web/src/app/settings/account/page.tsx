@@ -1,5 +1,3 @@
-"use client";
-
 import { AccountForm } from "@/features/setting";
 
 export default function AccountSettingsPage() {

@@ -7,7 +7,12 @@ interface CreateManagerInput {
 	email: string;
 	password: string;
 	name: string;
+	phone: string;
+}
+
+interface UpdateManagerInput {
 	phone?: string;
+	address?: string;
 }
 
 interface AssignManagerInput {
@@ -77,7 +82,7 @@ export const listManagers = async (userId: string) => {
 	// Get all managers, with salon info
 	const managers = await prisma.manager.findMany({
 		include: {
-			user: { select: { id: true, name: true, email: true, phone: true } },
+			user: { select: { id: true, name: true, email: true, phone: true, address: true, role: true } },
 			salon: { select: { id: true, name: true } },
 		},
 		orderBy: { createdAt: "desc" },
@@ -93,7 +98,7 @@ export const getManagerById = async (managerId: string, userId: string) => {
 	const manager = await prisma.manager.findUnique({
 		where: { id: managerId },
 		include: {
-			user: { select: { id: true, name: true, email: true, phone: true } },
+			user: { select: { id: true, name: true, email: true, phone: true, address: true, role: true } },
 			salon: { select: { id: true, name: true, ownerId: true } },
 		},
 	});
@@ -120,6 +125,50 @@ export const getManagerById = async (managerId: string, userId: string) => {
 	}
 
 	return manager;
+};
+
+export const updateManager = async (
+	managerId: string,
+	input: UpdateManagerInput,
+	userId: string,
+) => {
+	// Verify caller is an owner
+	const owner = await prisma.owner.findUnique({ where: { userId } });
+	if (!owner) {
+		throw new Error("Owner profile not found");
+	}
+
+	const manager = await prisma.manager.findUnique({
+		where: { id: managerId },
+		include: { user: true, salon: { select: { id: true, name: true } } },
+	});
+
+	if (!manager) {
+		throw new Error("Manager not found");
+	}
+
+	const updatedUser = await prisma.user.update({
+		where: { id: manager.userId },
+		data: {
+			...(input.phone !== undefined && { phone: input.phone }),
+			...(input.address !== undefined && { address: input.address }),
+		},
+	});
+
+	return {
+		id: manager.id,
+		userId: updatedUser.id,
+		salonId: manager.salonId,
+		user: {
+			id: updatedUser.id,
+			name: updatedUser.name,
+			email: updatedUser.email,
+			phone: updatedUser.phone,
+			address: updatedUser.address,
+			role: updatedUser.role,
+		},
+		salon: manager.salon ?? undefined,
+	};
 };
 
 export const assignManager = async (

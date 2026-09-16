@@ -1,82 +1,103 @@
 "use client";
 
-import * as React from "react";
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarGroup,
+	SidebarGroupLabel,
+	SidebarHeader,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarRail,
+	SidebarSeparator,
+} from "@/components/ui/sidebar";
+import { navConfig, type Role } from "@/config/navigation";
+import { useAuthStore } from "@/stores/auth-store";
+import { AudioLinesIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuthStore } from "@/stores/auth-store";
-import { navConfig, type Role } from "@/config/navigation";
-import { NavUser } from "@/components/nav-user";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { AudioLinesIcon } from "lucide-react";
+import * as React from "react";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const user = useAuthStore((s) => s.user);
-  const pathname = usePathname();
-  const normalizedRole = user?.role?.toLowerCase() as Role | undefined;
-  const navItems = normalizedRole ? navConfig[normalizedRole] : [];
+	const user = useAuthStore((s) => s.user);
+	const pathname = usePathname();
+	const normalizedRole = user?.role?.toLowerCase() as Role | undefined;
+	const navConfigData = normalizedRole ? navConfig[normalizedRole] : null;
 
-  const isActive = (url: string) =>
-    pathname === url || pathname.startsWith(url + "/");
+	const isActive = (url: string) =>
+		pathname === url || pathname.startsWith(url + "/");
 
-  return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href={normalizedRole === "owner" ? "/admin/dashboard" : normalizedRole === "customer" ? "/salons" : "/dashboard"} />}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <AudioLinesIcon className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">SalonHub</span>
-                <span className="truncate text-xs capitalize text-muted-foreground">{user?.role}</span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent className="px-2">
-        <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                isActive={isActive(item.url)}
-                tooltip={item.title}
-                render={<Link href={item.url} />}
-                className={
-                  isActive(item.url)
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
-                }
-              >
-                <item.icon className="size-4 shrink-0" />
-                <span className="truncate">{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter>
-        {user && (
-          <NavUser
-            user={{
-              name: user.name,
-              email: user.email,
-              avatar: "/avatars/user-1.webp",
-            }}
-          />
-        )}
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
-  );
+	return (
+		<Sidebar
+			collapsible="icon"
+			{...props}>
+			<SidebarHeader className="!h-14 !min-h-14 border-b border-border p-0 flex items-center">
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<SidebarMenuButton
+							size="lg"
+							render={
+								<Link
+									href={
+										normalizedRole === "owner"
+											? "/admin/dashboard"
+											: normalizedRole === "customer"
+												? "/salons"
+												: "/dashboard"
+									}
+								/>
+							}>
+							<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+								<AudioLinesIcon className="size-4" />
+							</div>
+							<div className="grid flex-1 text-left text-sm leading-tight">
+								<span className="truncate font-semibold">SalonHub</span>
+								<span className="truncate text-xs capitalize text-muted-foreground">
+									{user?.role}
+								</span>
+							</div>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarHeader>
+
+			<SidebarContent className="px-2">
+				{navConfigData?.groups.map((group, groupIdx) => (
+					<React.Fragment key={group.label}>
+						{groupIdx > 0 && <SidebarSeparator className="my-1" />}
+						<SidebarGroup className="p-0 pt-2">
+							<SidebarGroupLabel className="text-xs font-semibold tracking-wider text-primary">
+								{group.label}
+							</SidebarGroupLabel>
+							<SidebarMenu className="gap-1">
+								{group.items.map((item) => (
+									<SidebarMenuItem key={item.title}>
+										<SidebarMenuButton
+											isActive={isActive(item.url)}
+											tooltip={item.title}
+											render={
+												<Link
+													className={`flex items-center gap-2 rounded-md px-3 py-5! text-sm font-medium transition-colors ${
+														isActive(item.url)
+															? "bg-[#FFF8E7]! dark:bg-[#2A2200]! font-semibold border-l-4 border-[#D4AF37]"
+															: "hover:bg-muted hover:text-foreground"
+													}`}
+													href={item.url}
+												/>
+											}>
+											<item.icon className="size-4 shrink-0" />
+											<span className="truncate">{item.title}</span>
+										</SidebarMenuButton>
+									</SidebarMenuItem>
+								))}
+							</SidebarMenu>
+						</SidebarGroup>
+					</React.Fragment>
+				))}
+			</SidebarContent>
+
+			<SidebarRail />
+		</Sidebar>
+	);
 }

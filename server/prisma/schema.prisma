@@ -19,14 +19,19 @@ enum Role {
 // ─── User ─────────────────────────────────────────────────
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  password  String
-  name      String
-  phone     String?
-  role      Role
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique
+  password      String
+  name          String
+  phone         String
+  role          Role
+  avatar        String?
+  address       String?
+  dateOfBirth   DateTime?
+  emailVerified Boolean   @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   // One-to-one optional relations (only one will be non-null per user)
   owner    Owner?
@@ -50,20 +55,29 @@ model Owner {
 // ─── Salon ────────────────────────────────────────────────
 
 model Salon {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String
-  address     String
-  phone       String?
-  description String?
-  ownerId     String   @db.Uuid
-  managerId   String?  @unique @db.Uuid
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String
+  slug          String    @unique
+  address       String
+  phone         String
+  description   String
+  logo          String?
+  coverImage    String?
+  openingHours  Json?     // {"monday": "9:00-18:00", "tuesday": "9:00-18:00", ...}
+  rating        Float     @default(0)
+  isPublished   Boolean   @default(true)
+  ownerId       String    @db.Uuid
+  managerId     String?   @unique @db.Uuid
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   owner    Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   manager  Manager?  @relation("ManagerSalon", fields: [managerId], references: [id], onDelete: SetNull)
   staff    Staff[]
   services Service[]
+
+  @@index([ownerId])
+  @@index([slug])
 }
 
 // ─── Manager ──────────────────────────────────────────────
@@ -82,39 +96,56 @@ model Manager {
 // ─── Staff ────────────────────────────────────────────────
 
 model Staff {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
-  salonId   String?  @db.Uuid
-  specialty String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @unique @db.Uuid
+  salonId     String?   @db.Uuid
+  specialty   String?
+  bio         String?
+  avatar      String?
+  isActive    Boolean   @default(true)
+  joinedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   salon Salon? @relation(fields: [salonId], references: [id], onDelete: SetNull)
+
+  @@index([salonId])
 }
 
 // ─── Service ──────────────────────────────────────────────
 
 model Service {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
   name        String
+  slug        String    @unique
   description String?
-  price       Decimal  @db.Decimal(10, 2)
-  duration    Int // minutes
-  salonId     String?  @db.Uuid
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  price       Decimal   @db.Decimal(10, 2)
+  duration    Int       // minutes
+  image       String?
+  category    String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  salonId     String?   @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   salon Salon? @relation(fields: [salonId], references: [id], onDelete: SetNull)
+
+  @@index([salonId])
+  @@index([slug])
+  @@index([category])
 }
 
 // ─── Customer ─────────────────────────────────────────────
 
 model Customer {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @unique @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @unique @db.Uuid
+  notes        String?
+  loyaltyPoints Int      @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

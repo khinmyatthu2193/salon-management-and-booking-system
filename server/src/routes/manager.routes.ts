@@ -4,10 +4,11 @@ import {
 	deleteManager,
 	getManagerById,
 	listManagers,
+	updateManager,
 } from "@/controllers/manager.controller";
 import { authenticate, authorize } from "@/middleware/auth.middleware";
 import { validate } from "@/middleware/validate.middleware";
-import { assignManagerSchema, createManagerSchema } from "@/validations";
+import { assignManagerSchema, createManagerSchema, updateManagerSchema } from "@/validations";
 import { Router } from "express";
 
 const router = Router();
@@ -26,6 +27,15 @@ router.get("/", authenticate, authorize("owner"), listManagers);
 
 // GET /api/managers/:id - Get manager details (OWNER + MANAGER)
 router.get("/:id", authenticate, authorize("owner", "manager"), getManagerById);
+
+// PUT /api/managers/:id - Update manager info (OWNER only)
+router.put(
+	"/:id",
+	authenticate,
+	authorize("owner"),
+	validate(updateManagerSchema),
+	updateManager,
+);
 
 // PUT /api/managers/:id/assign - Assign manager to salon (OWNER only)
 router.put(

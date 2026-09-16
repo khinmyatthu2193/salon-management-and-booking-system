@@ -5,6 +5,9 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  phone?: string;
+  address?: string;
+  avatar?: string;
   role: string;
   salonId?: string;
 }
@@ -24,6 +27,8 @@ interface AuthState {
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
   setUser: (user: User | null) => void;
+  updateProfile: (data: { name?: string; phone?: string; address?: string; avatar?: string }) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 export function getDefaultRoute(role: string): string {
@@ -33,8 +38,8 @@ export function getDefaultRoute(role: string): string {
     case "staff":
       return "/schedule";
     case "manager":
-      return "/dashboard";
     case "customer":
+      return "/dashboard";
     default:
       return "/salons";
   }
@@ -100,5 +105,20 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setUser: (user) => {
     set({ user, isAuthenticated: !!user });
+  },
+
+  updateProfile: async (data) => {
+    const response = await api.put("/api/auth/profile", data);
+    const result = response.data;
+    if (!result.success) throw new Error(result.error || "Update failed");
+    set((state) => ({
+      user: state.user ? { ...state.user, ...result.data.user } : null,
+    }));
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await api.put("/api/auth/password", { currentPassword, newPassword });
+    const result = response.data;
+    if (!result.success) throw new Error(result.error || "Password change failed");
   },
 }));

@@ -13,7 +13,7 @@ import {
 
 const themes = [
 	{ value: "dark", label: "Luxe Dark", emoji: "🖤" },
-	{ value: "blush", label: "Elegant Blush", emoji: "🎀" },
+	{ value: "white", label: "White", emoji: "☀️" },
 ];
 
 export function ThemeToggle() {

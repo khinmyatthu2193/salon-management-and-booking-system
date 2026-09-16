@@ -8,7 +8,7 @@ const ROLE_HOME: Record<string, string> = {
   owner: "/admin/dashboard",
   manager: "/dashboard",
   staff: "/dashboard",
-  customer: "/salons",
+  customer: "/dashboard",
 };
 
 interface RoleGuardProps {

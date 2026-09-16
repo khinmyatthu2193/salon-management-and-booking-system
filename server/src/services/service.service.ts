@@ -20,10 +20,19 @@ interface UpdateServiceInput {
 	duration?: number;
 }
 
+function generateSlug(name: string): string {
+	return name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/(^-|-$)/g, "");
+}
+
 export const createService = async (input: CreateServiceInput) => {
+	const slug = generateSlug(input.name);
 	return prisma.service.create({
 		data: {
 			...input,
+			slug,
 		},
 	});
 };
